@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TextilePro — Textile Business Management</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --ink:#1a1a1a;--fabric:#f0ece4;--loom:#2c2c2c;--thread:#c87533;
+    --warp:#4a7c59;--quality:#2563eb;--spare:#7c3aed;
+    --yarn:#b45309;--beam:#0e7490;--grey:#4b5563;
+    --border:#d4c9b8;--card:#fff;--muted:#7a7065;--danger:#dc2626;
+    --mono:'IBM Plex Mono',monospace;--sans:'Inter',sans-serif;
+  }
+  body{font-family:var(--sans);background:var(--fabric);color:var(--ink);min-height:100vh;font-size:14px}
+
+  /* HEADER */
+  header{background:var(--loom);color:#fff;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;border-bottom:3px solid var(--thread)}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand-name{font-weight:700;font-size:16px}
+  .brand-sub{font-size:11px;color:#aaa;font-family:var(--mono)}
+  .header-date{font-family:var(--mono);font-size:12px;color:#aaa}
+
+  /* NAV */
+  nav{background:var(--loom);display:flex;gap:2px;padding:0 24px 12px;flex-wrap:wrap}
+  nav button{background:none;border:none;color:#aaa;padding:6px 13px;font-size:12px;font-family:var(--sans);cursor:pointer;border-radius:4px;transition:all 0.15s;display:flex;align-items:center;gap:4px}
+  nav button:hover{background:rgba(255,255,255,0.08);color:#fff}
+  nav button.active{background:var(--thread);color:#fff;font-weight:600}
+
+  main{max-width:1350px;margin:0 auto;padding:22px}
+  .page{display:none}.page.active{display:block}
+
+  /* STATS */
+  .stat-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:22px}
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden}
+  .stat-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
+  .stat-card.s-yarn::before{background:var(--yarn)}
+  .stat-card.s-beam::before{background:var(--beam)}
+  .stat-card.s-grey::before{background:var(--grey)}
+  .stat-card.s-ready::before{background:var(--warp)}
+  .stat-card.s-spare::before{background:var(--spare)}
+  .stat-card.s-challan::before{background:var(--quality)}
+  .stat-label{font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-weight:600;margin-bottom:5px}
+  .stat-value{font-size:26px;font-weight:700;font-family:var(--mono)}
+  .stat-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+  /* CARDS */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:16px}
+  .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+  .card-title{font-weight:700;font-size:15px}
+
+  /* TYPE TOGGLE */
+  .type-toggle{display:flex;gap:6px;margin-bottom:16px}
+  .type-btn{padding:7px 18px;border:2px solid var(--border);background:#fff;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:5px}
+  .type-btn.yarn.active{border-color:var(--yarn);background:#fef3c7;color:var(--yarn)}
+  .type-btn.beam.active{border-color:var(--beam);background:#ecfeff;color:var(--beam)}
+  .type-btn:not(.active){color:var(--muted)}
+
+  /* FORMS */
+  .form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+  .form-grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+  .form-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+  .form-group{display:flex;flex-direction:column;gap:4px}
+  .form-group label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+  .form-group input,.form-group select,.form-group textarea{padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:var(--sans);font-size:13px;background:#faf9f6;color:var(--ink);outline:none;transition:border-color 0.15s}
+  .form-group input:focus,.form-group select:focus{border-color:var(--thread);background:#fff}
+  .form-group textarea{resize:vertical;min-height:60px}
+  .form-section{margin-bottom:13px}
+  .form-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:9px;padding-bottom:5px;border-bottom:1px dashed var(--border)}
+
+  /* TAGS */
+  .type-tag{display:inline-flex;align-items:center;gap:3px;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
+  .type-tag.yarn{background:#fef3c7;color:#b45309}
+  .type-tag.beam{background:#ecfeff;color:#0e7490}
+  .type-tag.grey{background:#f3f4f6;color:#374151;border:1px solid #d1d5db}
+
+  /* QUALITY BADGES */
+  .q-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;font-family:var(--mono)}
+  .q-A{background:#dcfce7;color:#15803d}
+  .q-B{background:#fef9c3;color:#a16207}
+  .q-C{background:#fee2e2;color:#b91c1c}
+  .q-Mending{background:#ede9fe;color:#6d28d9}
+  .q-Standard{background:#e0f2fe;color:#0369a1}
+  .q-Second{background:#fef3c7;color:#b45309}
+  .q-Defective{background:#fee2e2;color:#b91c1c}
+
+  /* STATUS */
+  .status-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
+  .s-in{background:#dbeafe;color:#1d4ed8}
+  .s-ready{background:#d1fae5;color:#065f46}
+  .s-sold{background:#f3f4f6;color:#374151}
+  .s-reject{background:#fee2e2;color:#991b1b}
+
+  /* BUTTONS */
+  .btn{padding:8px 15px;border:none;border-radius:6px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:5px}
+  .btn-primary{background:var(--thread);color:#fff}.btn-primary:hover{background:#a85e28}
+  .btn-success{background:var(--warp);color:#fff}.btn-success:hover{background:#3a6347}
+  .btn-purple{background:var(--spare);color:#fff}
+  .btn-blue{background:var(--quality);color:#fff}
+  .btn-grey{background:#374151;color:#fff}.btn-grey:hover{background:#1f2937}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--ink)}
+  .btn-outline:hover{border-color:var(--thread);color:var(--thread)}
+  .btn-danger{background:var(--danger);color:#fff}
+  .btn-sm{padding:5px 10px;font-size:12px}
+
+  /* TABLE */
+  .table-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  thead{background:#f5f1ea}
+  th{padding:9px 11px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap}
+  td{padding:9px 11px;border-bottom:1px solid #f0ece4;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#faf8f5}
+
+  /* GREY ROLL CARD GRID */
+  .item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:11px}
+  .item-card{border:1px solid var(--border);border-radius:8px;padding:12px;cursor:pointer;transition:all 0.15s}
+  .item-card:hover{border-color:var(--thread);box-shadow:0 2px 8px rgba(200,117,51,0.15)}
+  .item-card.selected{border-color:var(--thread);background:#fef6ee}
+  .item-no{font-family:var(--mono);font-size:14px;font-weight:700;margin-bottom:3px}
+  .item-detail{font-size:11px;color:var(--muted);line-height:1.7}
+
+  /* GREY ROLL SPECIFIC */
+  .grey-card{border:1px solid #d1d5db;border-radius:8px;padding:12px;transition:all 0.15s;cursor:pointer}
+  .grey-card:hover{border-color:#374151;box-shadow:0 2px 8px rgba(55,65,81,0.15)}
+  .grey-card.selected{border-color:#374151;background:#f9fafb}
+  .grey-roll-no{font-family:var(--mono);font-size:14px;font-weight:700;color:#1f2937;margin-bottom:3px}
+
+  /* CHALLAN */
+  .challan-box{background:#fff;border:2px solid var(--ink);border-radius:8px;padding:26px;font-family:var(--sans)}
+  .challan-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+  .challan-co{font-size:20px;font-weight:800}
+  .challan-co-sub{font-size:11px;color:var(--muted)}
+  .challan-title h2{font-family:var(--mono);font-size:16px;color:var(--thread);border:2px solid var(--thread);padding:3px 10px;display:inline-block}
+  .challan-no{font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--mono)}
+  .challan-divider{border:none;border-top:2px solid var(--ink);margin:12px 0}
+  .challan-party{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+  .challan-party-block{border:1px solid var(--border);border-radius:6px;padding:10px}
+  .challan-party-block label{font-size:10px;text-transform:uppercase;color:var(--muted);font-weight:700;letter-spacing:1px;display:block;margin-bottom:3px}
+  .challan-party-block .value{font-weight:600;font-size:14px}
+  .challan-table{width:100%;border-collapse:collapse;margin-bottom:16px}
+  .challan-table th{background:var(--loom);color:#fff;padding:7px 9px;font-size:11px;text-align:left}
+  .challan-table td{padding:7px 9px;border-bottom:1px solid var(--border);font-size:12px}
+  .challan-footer{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:22px}
+  .sig-line{border-top:1px solid var(--ink);padding-top:5px;font-size:11px;color:var(--muted);text-align:center;margin-top:34px}
+
+  /* MODAL */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center}
+  .modal-overlay.open{display:flex}
+  .modal{background:#fff;border-radius:12px;padding:24px;max-width:940px;width:95%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+  .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+  .modal-title{font-size:16px;font-weight:700}
+  .close-btn{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted)}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--loom);color:#fff;padding:11px 18px;border-radius:8px;font-size:13px;font-weight:600;transform:translateY(80px);opacity:0;transition:all 0.3s;z-index:300;border-left:4px solid var(--thread)}
+  .toast.show{transform:translateY(0);opacity:1}
+
+  .section-title{font-size:19px;font-weight:800;margin-bottom:3px}
+  .section-sub{font-size:13px;color:var(--muted);margin-bottom:16px}
+  .info-box{background:#fffbf5;border:1px solid #f0d9b5;border-radius:8px;padding:11px 15px;font-size:12px;color:#7c5c3e;margin-bottom:14px}
+  .grey-info{background:#f9fafb;border:1px solid #d1d5db;border-radius:8px;padding:11px 15px;font-size:12px;color:#374151;margin-bottom:14px}
+
+  /* QUICK ENTRY GRID — mill register style */
+  .qe-wrap{overflow-x:auto;border:1px solid #9ca3af;border-radius:4px}
+  .qe-table{width:100%;border-collapse:collapse;font-size:12px;min-width:1300px}
+  .qe-table thead th{background:#f5e6a8;border:1px solid #c9b86a;color:#1a1a1a;font-weight:700;padding:6px 8px;text-align:left;white-space:nowrap;position:sticky;top:0}
+  .qe-table tbody td{border:1px solid #d1d5db;padding:0;height:30px}
+  .qe-table tbody tr:nth-child(even){background:#fafafa}
+  .qe-table tbody tr.qe-active{background:#fff7e0}
+  .qe-table input,.qe-table select{
+    width:100%;height:30px;border:none;outline:none;padding:0 6px;font-size:12px;
+    font-family:var(--sans);background:transparent;box-sizing:border-box;
+  }
+  .qe-table input:focus,.qe-table select:focus{background:#fff8df;box-shadow:inset 0 0 0 2px var(--thread)}
+  .qe-table td.qe-sno{text-align:center;font-weight:700;background:#f5f1ea;color:var(--muted)}
+  .qe-table td.qe-del{text-align:center}
+  .qe-del-btn{background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px;padding:2px 6px}
+  .qe-del-btn:hover{background:#fee2e2;border-radius:4px}
+
+  @media print{
+    body{background:#fff}
+    header,nav,.no-print{display:none!important}
+    main{padding:0;max-width:100%}
+  }
+  @media(max-width:768px){
+    .stat-grid{grid-template-columns:repeat(3,1fr)}
+    .form-grid,.form-grid-4{grid-template-columns:1fr 1fr}
+    nav button{font-size:11px;padding:5px 7px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span style="font-size:22px">🧵</span>
+    <div>
+      <div class="brand-name">TextilePro</div>
+      <div class="brand-sub">Inward · Grey Roll · Quality · Challan · Spares</div>
+    </div>
+  </div>
+  <div class="header-date" id="headerDate"></div>
+</header>
+
+<nav>
+  <button class="active" onclick="showPage('dashboard')">📊 Dashboard</button>
+  <button onclick="showPage('inward')">📥 Inward Stock</button>
+  <button onclick="showPage('grey')">🩶 Grey Roll Stock</button>
+  <button onclick="showPage('ready')">📦 Ready to Sell</button>
+  <button onclick="showPage('challan')">🧾 Challan</button>
+  <button onclick="showPage('spares')">🔧 Spare Parts</button>
+</nav>
+
+<main>
+
+<!-- ======= DASHBOARD ======= -->
+<div class="page active" id="page-dashboard">
+  <div class="section-title">Dashboard</div>
+  <div class="section-sub">Live overview of your textile business</div>
+  <div class="stat-grid">
+    <div class="stat-card s-yarn">
+      <div class="stat-label">🧶 Yarn Rolls</div>
+      <div class="stat-value" id="stat-yarn">0</div>
+      <div class="stat-sub">Inward received</div>
+    </div>
+    <div class="stat-card s-beam">
+      <div class="stat-label">🪡 Warp Beams</div>
+      <div class="stat-value" id="stat-beam">0</div>
+      <div class="stat-sub">Inward received</div>
+    </div>
+    <div class="stat-card s-grey">
+      <div class="stat-label">🩶 Grey Rolls</div>
+      <div class="stat-value" id="stat-grey">0</div>
+      <div class="stat-sub">Finish product in stock</div>
+    </div>
+    <div class="stat-card s-ready">
+      <div class="stat-label">📦 Ready to Sell</div>
+      <div class="stat-value" id="stat-ready">0</div>
+      <div class="stat-sub">Quality passed grey rolls</div>
+    </div>
+    <div class="stat-card s-spare">
+      <div class="stat-label">🔧 Spare Parts</div>
+      <div class="stat-value" id="stat-spare">0</div>
+      <div class="stat-sub">Items in stock</div>
+    </div>
+    <div class="stat-card s-challan">
+      <div class="stat-label">🧾 Challans</div>
+      <div class="stat-value" id="stat-challan">0</div>
+      <div class="stat-sub">Issued so far</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Recent Inward Stock</span>
+        <button class="btn btn-outline btn-sm" onclick="showPage('inward')">View All</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>ID</th><th>Type</th><th>Party</th><th>Status</th></tr></thead>
+        <tbody id="dash-inward-body"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">No records yet</td></tr></tbody></table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Grey Roll Stock</span>
+        <button class="btn btn-outline btn-sm" onclick="showPage('grey')">View All</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Roll No</th><th>Design</th><th>Meters</th><th>Grade</th></tr></thead>
+        <tbody id="dash-grey-body"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">No grey rolls yet</td></tr></tbody></table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Recent Challans</span>
+        <button class="btn btn-outline btn-sm" onclick="showPage('challan')">View All</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Challan No</th><th>Party</th><th>Rolls</th><th>Date</th></tr></thead>
+        <tbody id="dash-challan-body"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">No challans yet</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======= INWARD STOCK ======= -->
+<div class="page" id="page-inward">
+  <div class="section-title">Inward Stock</div>
+  <div class="section-sub">Record incoming Yarn Rolls and Warp Beams from suppliers</div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Add New Inward Entry</span></div>
+    <div class="type-toggle">
+      <button class="type-btn yarn active" id="btn-yarn" onclick="setType('yarn')">🧶 Yarn Roll</button>
+      <button class="type-btn beam" id="btn-beam" onclick="setType('beam')">🪡 Warp Beam</button>
+    </div>
+    <div id="yarn-fields" class="form-section">
+      <div class="form-section-title">Basic Information</div>
+      <div class="form-grid" style="margin-bottom:10px">
+        <div class="form-group"><label id="lbl-id">Roll Number *</label><input type="text" id="in-id" placeholder="e.g. YR-001"></div>
+        <div class="form-group"><label>Party / Supplier *</label><input type="text" id="in-party" placeholder="e.g. Ramesh Yarn Co."></div>
+        <div class="form-group"><label>Date Received</label><input type="date" id="in-date"></div>
+        <div class="form-group"><label>Vehicle / Truck No</label><input type="text" id="in-vehicle" placeholder="e.g. RJ-14-GA-1234"></div>
+        <div class="form-group"><label>Lot / Batch No</label><input type="text" id="in-lot" placeholder="Lot or batch number"></div>
+        <div class="form-group"><label>Rate (₹)</label><input type="number" id="in-rate" placeholder="Purchase rate" step="0.01"></div>
+      </div>
+      <div class="form-section-title">🧶 Yarn Roll Details</div>
+      <div class="form-grid-4" style="margin-bottom:10px">
+        <div class="form-group"><label>Yarn Count (Ne) *</label><input type="text" id="yr-count" placeholder="e.g. 30s, 40s"></div>
+        <div class="form-group"><label>Yarn Type *</label><select id="yr-type"><option value="">Select...</option><option>Cotton</option><option>Non-Dyeing</option><option>Roto</option></select></div>
+        <div class="form-group"><label>Ply</label><select id="yr-ply"><option value="1">Single (1 ply)</option><option value="2">Double (2 ply)</option><option value="3">Three ply</option></select></div>
+        <div class="form-group"><label>Color / Shade</label><input type="text" id="yr-color" placeholder="e.g. White, Dyed"></div>
+        <div class="form-group"><label>Weight/Roll (kg) *</label><input type="number" id="yr-weight" placeholder="e.g. 5.2" step="0.01"></div>
+        <div class="form-group"><label>No. of Rolls *</label><input type="number" id="yr-qty" placeholder="e.g. 10" value="1"></div>
+        <div class="form-group"><label>Cone / Bobbin Type</label><select id="yr-cone"><option value="">Select...</option><option>Cone</option><option>Bobbin</option><option>Cheese</option><option>Hank</option><option>Ring</option></select></div>
+        <div class="form-group"><label>Shade No</label><input type="text" id="yr-shade" placeholder="Shade / dye no"></div>
+        <div class="form-group"><label>Moisture %</label><input type="number" id="yr-moisture" placeholder="e.g. 8.5" step="0.1"></div>
+        <div class="form-group"><label>Length (m/roll)</label><input type="number" id="yr-length" placeholder="Meters per cone"></div>
+        <div class="form-group"><label>Twist (TPI)</label><input type="number" id="yr-twist" placeholder="Twists per inch"></div>
+        <div class="form-group"><label>Remarks</label><input type="text" id="yr-remarks" placeholder="Optional notes"></div>
+      </div>
+    </div>
+    <div id="beam-fields" class="form-section" style="display:none">
+      <div class="form-section-title">🪡 Warp Beam Details</div>
+      <div class="form-grid-4" style="margin-bottom:10px">
+        <div class="form-group"><label>Beam Number *</label><input type="text" id="wb-beamno" placeholder="e.g. B-001"></div>
+        <div class="form-group"><label>Party / Supplier *</label><input type="text" id="wb-party" placeholder="e.g. Ramesh Yarn Co."></div>
+        <div class="form-group"><label>Date Received</label><input type="date" id="wb-date"></div>
+        <div class="form-group"><label>Yarn Count (Ne) *</label><input type="text" id="wb-count" placeholder="e.g. 30s"></div>
+        <div class="form-group"><label>Yarn Type *</label><select id="wb-yarntype"><option value="">Select...</option><option>Cotton</option><option>Non-Dyeing</option><option>Roto</option></select></div>
+        <div class="form-group"><label>Total Ends *</label><input type="number" id="wb-ends" placeholder="No. of warp ends"></div>
+        <div class="form-group"><label>Reed Width (cm)</label><input type="number" id="wb-reed" placeholder="e.g. 180"></div>
+        <div class="form-group"><label>Beam Length (m) *</label><input type="number" id="wb-length" placeholder="e.g. 500"></div>
+        <div class="form-group"><label>Beam Weight (kg)</label><input type="number" id="wb-weight" placeholder="Total wt" step="0.1"></div>
+        <div class="form-group"><label>Net Yarn Wt (kg)</label><input type="number" id="wb-netyarn" placeholder="Yarn only" step="0.1"></div>
+        <div class="form-group"><label>Design / Pattern</label><input type="text" id="wb-design" placeholder="Plain, Twill, Dobby"></div>
+        <div class="form-group"><label>EPI</label><input type="number" id="wb-epi" placeholder="Ends per inch"></div>
+        <div class="form-group"><label>Beam Material</label><select id="wb-material"><option value="">Select...</option><option>Steel</option><option>Aluminium</option><option>Iron</option></select></div>
+        <div class="form-group"><label>Loom / Machine No *</label><input type="text" id="wb-loom" placeholder="e.g. Loom-3, Machine-A"></div>
+        <div class="form-group"><label>Vehicle / Truck No</label><input type="text" id="wb-vehicle" placeholder="e.g. RJ-14-GA-1234"></div>
+        <div class="form-group"><label>Lot / Batch No</label><input type="text" id="wb-lot" placeholder="Lot or batch number"></div>
+        <div class="form-group"><label>Rate (₹)</label><input type="number" id="wb-rate" placeholder="Purchase rate" step="0.01"></div>
+        <div class="form-group"><label>Remarks</label><input type="text" id="wb-remarks" placeholder="Optional notes"></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="addInward()">➕ Add to Inward Stock</button>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">All Inward Stock</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="inward-filter-type" onchange="filterInward()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none"><option value="">All Types</option><option value="yarn">Yarn Roll</option><option value="beam">Warp Beam</option></select>
+        <input type="text" placeholder="Search..." id="inward-search" oninput="filterInward()" style="padding:7px 11px;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none;width:170px">
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Type</th><th>ID</th><th>Party</th><th>Count</th><th>Details</th><th>Qty/Wt</th><th>Rate</th><th>Date</th><th>Status</th><th>Quality</th><th>Del</th></tr></thead>
+        <tbody id="inward-body"><tr><td colspan="11" style="text-align:center;color:var(--muted);padding:22px">No inward stock yet</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======= GREY ROLL STOCK ======= -->
+<div class="page" id="page-grey">
+  <div class="section-title">Grey Roll Stock</div>
+  <div class="section-sub">Your finished product — grey fabric rolls produced from weaving/mussiness process</div>
+
+  <div class="grey-info">
+    <strong>🩶 Grey Roll</strong> is your <strong>finished woven fabric</strong> — produced after the weaving/mussiness process using Warp Beams and Yarn. Each roll gets a unique Roll Number, is quality graded, and then dispatched via Challan.
+  </div>
+
+  <!-- QUICK ENTRY GRID (mill register style) -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">⚡ Quick Entry — Grey Roll Register</span>
+      <span style="font-size:11px;color:var(--muted);font-weight:600">Press Tab to move across · Enter on last cell adds a new row</span>
+    </div>
+    <div class="qe-wrap">
+      <table class="qe-table" id="qe-table">
+        <thead>
+          <tr>
+            <th style="width:36px">S.No</th>
+            <th>Beam No</th>
+            <th>Lm No</th>
+            <th>Piece No</th>
+            <th>Grey Mtrs</th>
+            <th>Weight</th>
+            <th>Avg Wt</th>
+            <th>St-Wt</th>
+            <th>Diff</th>
+            <th>Pick</th>
+            <th>Quality</th>
+            <th>Dsg-No</th>
+            <th>Shd-No</th>
+            <th>Selvedge</th>
+            <th>Party</th>
+            <th>Remark</th>
+            <th style="width:40px"></th>
+          </tr>
+        </thead>
+        <tbody id="qe-body"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:12px;align-items:center">
+      <button class="btn btn-outline btn-sm" onclick="qeAddRow()">➕ Add Row</button>
+      <button class="btn btn-grey" onclick="qeSaveAll()">💾 Save All Rows to Grey Stock</button>
+      <span style="font-size:12px;color:var(--muted)">F1 = Exit row · F3 = Delete row</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title">Add Grey Roll (Finished Product)</span></div>
+    <div class="form-section">
+      <div class="form-section-title">Roll Identity</div>
+      <div class="form-grid" style="margin-bottom:10px">
+        <div class="form-group"><label>Grey Roll Number *</label><input type="text" id="gr-no" placeholder="e.g. GR-2024-001"></div>
+        <div class="form-group"><label>Production Date *</label><input type="date" id="gr-date"></div>
+        <div class="form-group"><label>Beam Used (Warp Beam No)</label><select id="gr-beam" onchange="onGreyBeamChange()"><option value="">-- Select Beam (optional) --</option></select></div>
+        <div class="form-group"><label>Loom / Machine No</label><input type="text" id="gr-loom" placeholder="Auto-filled from beam, or enter manually"></div>
+        <div class="form-group"><label>Weaver / Operator</label><input type="text" id="gr-weaver" placeholder="Operator name"></div>
+        <div class="form-group"><label>Lot / Production Batch</label><input type="text" id="gr-lot" placeholder="Lot or batch no"></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">Fabric Specifications</div>
+      <div class="form-grid-4" style="margin-bottom:10px">
+        <div class="form-group"><label>Fabric Construction</label><input type="text" id="gr-construction" placeholder="e.g. 40x40 / 110x90"></div>
+        <div class="form-group"><label>Weave Type</label><select id="gr-weave"><option value="">Select...</option><option>Plain</option><option>Twill</option><option>Satin</option><option>Dobby</option><option>Jacquard</option><option>Canvas</option><option>Poplin</option><option>Voile</option><option>Cambric</option></select></div>
+        <div class="form-group"><label>Width (inches) *</label><input type="number" id="gr-width" placeholder="e.g. 63, 72, 90"></div>
+        <div class="form-group"><label>Length / Meters *</label><input type="number" id="gr-meters" placeholder="e.g. 120" step="0.1"></div>
+        <div class="form-group"><label>Weight (kg)</label><input type="number" id="gr-weight" placeholder="Roll weight" step="0.01"></div>
+        <div class="form-group"><label>EPI (Ends/inch)</label><input type="number" id="gr-epi" placeholder="e.g. 60"></div>
+        <div class="form-group"><label>PPI (Picks/inch)</label><input type="number" id="gr-ppi" placeholder="e.g. 58"></div>
+        <div class="form-group"><label>Warp Count</label><input type="text" id="gr-warp-count" placeholder="e.g. 40s"></div>
+        <div class="form-group"><label>Weft Count</label><input type="text" id="gr-weft-count" placeholder="e.g. 40s"></div>
+        <div class="form-group"><label>Warp Yarn Type</label><input type="text" id="gr-warp-yarn" placeholder="e.g. Cotton"></div>
+        <div class="form-group"><label>Weft Yarn Type</label><input type="text" id="gr-weft-yarn" placeholder="e.g. Cotton, Non-Dyeing, Roto"></div>
+        <div class="form-group"><label>Grey Fabric Rate (₹/m)</label><input type="number" id="gr-rate" placeholder="Sale rate per meter" step="0.01"></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">Quality at Production</div>
+      <div class="form-grid-4" style="margin-bottom:10px">
+        <div class="form-group"><label>Quality Grade</label><select id="gr-quality"><option value="">Pending Inspection</option><option value="Standard">Standard (Sell)</option><option value="Second">Second Quality</option><option value="Defective">Defective</option></select></div>
+        <div class="form-group"><label>Defect (if any)</label><select id="gr-defect"><option value="">None</option><option>Broken Pick</option><option>Missing End</option><option>Reed Mark</option><option>Oil Stain</option><option>Float</option><option>Hole</option><option>Thick/Thin</option><option>Loose Selvedge</option><option>Wrong Draw-in</option><option>Other</option></select></div>
+        <div class="form-group"><label>Shrinkage %</label><input type="number" id="gr-shrink" placeholder="Warp shrinkage %" step="0.1"></div>
+        <div class="form-group"><label>Crimp %</label><input type="number" id="gr-crimp" placeholder="Yarn crimp %" step="0.1"></div>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px"><label>Remarks / Notes</label><textarea id="gr-remarks" placeholder="Any additional production remarks..."></textarea></div>
+    <button class="btn btn-grey" onclick="addGreyRoll()">🩶 Add Grey Roll to Stock</button>
+  </div>
+
+  <!-- GREY ROLL TABLE -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">All Grey Rolls in Stock</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="grey-filter-grade" onchange="filterGrey()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none">
+          <option value="">All Grades</option>
+          <option value="Standard">Standard</option>
+          <option value="Second">Second Quality</option>
+          <option value="Defective">Defective</option>
+          <option value="">Pending</option>
+        </select>
+        <select id="grey-filter-status" onchange="filterGrey()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none">
+          <option value="">All Status</option>
+          <option value="In Stock">In Stock</option>
+          <option value="Ready">Ready to Sell</option>
+          <option value="Sold">Sold</option>
+        </select>
+        <input type="text" placeholder="Search roll no / weave..." id="grey-search" oninput="filterGrey()" style="padding:7px 11px;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none;width:160px">
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Grey Roll No</th><th>Date</th><th>Beam Used</th><th>Loom</th>
+            <th>Weave</th><th>Construction</th><th>Width</th><th>Meters</th>
+            <th>Weight</th><th>EPI/PPI</th><th>Grade</th><th>Defect</th>
+            <th>Rate</th><th>Status</th><th>Del</th>
+          </tr>
+        </thead>
+        <tbody id="grey-body"><tr><td colspan="15" style="text-align:center;color:var(--muted);padding:22px">No grey rolls added yet. Add your finished product rolls above.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SUMMARY CARDS -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:4px">
+    <div class="card" style="text-align:center;padding:16px">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-weight:600;margin-bottom:6px">Total Rolls</div>
+      <div style="font-size:28px;font-weight:700;font-family:var(--mono)" id="gs-total">0</div>
+    </div>
+    <div class="card" style="text-align:center;padding:16px">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-weight:600;margin-bottom:6px">Total Meters</div>
+      <div style="font-size:28px;font-weight:700;font-family:var(--mono)" id="gs-meters">0</div>
+    </div>
+    <div class="card" style="text-align:center;padding:16px">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-weight:600;margin-bottom:6px">Ready to Sell</div>
+      <div style="font-size:28px;font-weight:700;font-family:var(--mono);color:var(--warp)" id="gs-ready">0</div>
+    </div>
+    <div class="card" style="text-align:center;padding:16px">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-weight:600;margin-bottom:6px">Sold Rolls</div>
+      <div style="font-size:28px;font-weight:700;font-family:var(--mono);color:var(--muted)" id="gs-sold">0</div>
+    </div>
+  </div>
+</div>
+
+<!-- ======= READY TO SELL ======= -->
+<!-- ======= READY TO SELL ======= -->
+<div class="page" id="page-ready">
+  <div class="section-title">Ready to Sell Inventory</div>
+  <div class="section-sub">Quality cleared Grey Rolls, Yarn, and Beams ready for dispatch</div>
+
+  <!-- 📊 SUMMARY METRICS HEADER -->
+  <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
+    <div class="card" style="margin-bottom:0; padding:14px; text-align:center;">
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); font-weight:700;">Sellable Items</div>
+      <div style="font-size:24px; font-weight:700; font-family:var(--mono);" id="rts-total-count">0</div>
+    </div>
+    <div class="card" style="margin-bottom:0; padding:14px; text-align:center;">
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); font-weight:700;">Total Meters Available</div>
+      <div style="font-size:24px; font-weight:700; font-family:var(--mono);" id="rts-total-meters">0 m</div>
+    </div>
+    <div class="card" style="margin-bottom:0; padding:14px; text-align:center;">
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); font-weight:700;">Avg Rate (₹/m)</div>
+      <div style="font-size:24px; font-weight:700; font-family:var(--mono);" id="rts-avg-rate">₹0.00</div>
+    </div>
+    <div class="card" style="margin-bottom:0; padding:14px; text-align:center;">
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); font-weight:700;">Total Ready Value</div>
+      <div style="font-size:24px; font-weight:700; font-family:var(--mono); color:var(--warp, #2563eb);" id="rts-total-value">₹0.00</div>
+    </div>
+  </div>
+
+  <!-- 📦 ITEM FILTER & GRID CARD -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Available Items for Sale</span>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <select id="ready-filter" onchange="refreshReadyGrid()" style="padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:12px; outline:none">
+          <option value="">All Item Types</option>
+          <option value="grey">🩶 Grey Rolls</option>
+          <option value="yarn">🧶 Yarn Rolls</option>
+          <option value="beam">🪡 Warp Beams</option>
+        </select>
+        <select id="ready-grade-filter" onchange="refreshReadyGrid()" style="padding:7px 10px; border:1px solid var(--border); border-radius:6px; font-size:12px; outline:none">
+          <option value="">All Grades</option>
+          <option value="Standard">Standard (Sell)</option>
+          <option value="Second">Second Quality</option>
+        </select>
+        <input type="text" placeholder="Search item, weave, code..." id="ready-search" oninput="refreshReadyGrid()" style="padding:7px 11px; border:1px solid var(--border); border-radius:6px; font-size:13px; outline:none; width:180px">
+      </div>
+    </div>
+
+    <!-- Dynamic Item Cards Container -->
+    <div class="item-grid" id="ready-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:16px; padding:8px 0;">
+      <div style="color:var(--muted); padding:30px; text-align:center; grid-column:1/-1;">No items cleared for dispatch. Check back after quality inspection.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ======= CHALLAN ======= -->
+<div class="page" id="page-challan">
+  <div class="section-title">Challan / Delivery Note</div>
+  <div class="section-sub">Generate dispatch challan with Grey Roll numbers for customer delivery</div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Create New Challan</span></div>
+    <div class="form-grid" style="margin-bottom:14px">
+      <div class="form-group"><label>Customer / Party Name *</label><input type="text" id="ch-party" placeholder="Customer name"></div>
+      <div class="form-group"><label>Customer Address</label><input type="text" id="ch-address" placeholder="Full address"></div>
+      <div class="form-group"><label>GST No / Mobile</label><input type="text" id="ch-gst" placeholder="GST or mobile"></div>
+      <div class="form-group"><label>Transport / Vehicle No</label><input type="text" id="ch-vehicle" placeholder="Truck/vehicle no"></div>
+      <div class="form-group"><label>Delivery Date</label><input type="date" id="ch-date"></div>
+      <div class="form-group"><label>Remarks</label><input type="text" id="ch-remarks" placeholder="Optional"></div>
+    </div>
+    <div style="font-weight:600;font-size:13px;margin-bottom:8px">Select Grey Rolls / Items for Challan <span style="color:var(--muted);font-weight:400;font-size:12px">(only ready/standard quality items shown)</span></div>
+    <div class="item-grid" id="ch-item-grid" style="margin-bottom:14px">
+      <div style="color:var(--muted);padding:20px;grid-column:1/-1">No items available.</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <button class="btn btn-blue" onclick="createChallan()">🧾 Generate Challan</button>
+      <span style="font-size:13px;color:var(--muted)">Selected: <strong id="selected-count">0</strong> items</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Issued Challans</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Challan No</th><th>Party</th><th>Address</th><th>Items</th><th>Total Meters</th><th>Date</th><th>Print</th></tr></thead>
+        <tbody id="challan-body"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:22px">No challans issued yet</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ======= SPARE PARTS ======= -->
+<div class="page" id="page-spares">
+  <div class="section-title">Spare Parts</div>
+  <div class="section-sub">Manage machine spares, consumables, and track which machine they're issued to</div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Add Spare Part</span></div>
+    <div class="form-grid-4" style="margin-bottom:12px">
+      <div class="form-group"><label>Part Name *</label><input type="text" id="sp-name" placeholder="e.g. Shuttle, Needle, Belt"></div>
+      <div class="form-group"><label>Part Code / SKU</label><input type="text" id="sp-code" placeholder="e.g. SP-001"></div>
+      <div class="form-group"><label>Machine Type</label><select id="sp-machine"><option value="">Select machine type...</option><option>Mussiness Machine</option><option>Warping Machine</option><option>Sizing Machine</option><option>Loom</option><option>Winding Machine</option><option>Twisting Machine</option><option>Compressor</option><option>Generator</option><option>Other</option></select></div>
+      <div class="form-group"><label>Quantity *</label><input type="number" id="sp-qty" placeholder="e.g. 10"></div>
+      <div class="form-group"><label>Unit</label><select id="sp-unit"><option>Pcs</option><option>Set</option><option>Meter</option><option>Kg</option><option>Liter</option><option>Box</option><option>Pair</option></select></div>
+      <div class="form-group"><label>Supplier</label><input type="text" id="sp-supplier" placeholder="Supplier name"></div>
+      <div class="form-group"><label>Unit Cost (₹)</label><input type="number" id="sp-cost" placeholder="e.g. 250" step="0.01"></div>
+      <div class="form-group"><label>Min Stock (Alert)</label><input type="number" id="sp-min" placeholder="Alert below this"></div>
+      <div class="form-group"><label>Date Added</label><input type="date" id="sp-date"></div>
+      <div class="form-group"><label>Remarks</label><input type="text" id="sp-remarks" placeholder="Optional"></div>
+    </div>
+    <button class="btn btn-purple" onclick="addSpare()">🔧 Add Spare Part</button>
+  </div>
+
+  <!-- ISSUE TO MACHINE -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">🏭 Issue Spare Part to Machine</span></div>
+    <div class="info-box">Record every time a spare part is taken out of stock and given to a specific machine — this keeps an exact trail of how much has gone to which machine number.</div>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="form-group">
+        <label>Select Spare Part *</label>
+        <select id="is-part" onchange="onIssuePartChange()"><option value="">-- Select Part --</option></select>
+      </div>
+      <div class="form-group">
+        <label>Machine No / ID *</label>
+        <input type="text" id="is-machineno" placeholder="e.g. Loom-3, Mussiness-1">
+      </div>
+      <div class="form-group">
+        <label>Quantity to Issue *</label>
+        <input type="number" id="is-qty" placeholder="e.g. 2">
+      </div>
+      <div class="form-group">
+        <label>Available Stock</label>
+        <input type="text" id="is-available" readonly placeholder="—" style="background:#f3f4f6;font-weight:700">
+      </div>
+      <div class="form-group">
+        <label>Date Issued</label>
+        <input type="date" id="is-date">
+      </div>
+      <div class="form-group">
+        <label>Issued To (Person)</label>
+        <input type="text" id="is-person" placeholder="Operator / fitter name">
+      </div>
+      <div class="form-group">
+        <label>Reason / Remarks</label>
+        <input type="text" id="is-remarks" placeholder="e.g. Routine replacement, breakdown">
+      </div>
+    </div>
+    <button class="btn btn-grey" onclick="issueSpare()">🏭 Issue to Machine</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Spare Parts Inventory</span>
+      <input type="text" placeholder="Search parts..." id="spare-search" oninput="filterSpares()" style="padding:7px 11px;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none;width:180px">
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Part Name</th><th>Code</th><th>Machine Type</th><th>In Stock</th><th>Total Issued</th><th>Unit</th><th>Supplier</th><th>Cost</th><th>Total Value</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="spare-body"><tr><td colspan="11" style="text-align:center;color:var(--muted);padding:22px">No spare parts added yet</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ISSUANCE HISTORY -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Issuance History — By Machine</span>
+      <div style="display:flex;gap:8px">
+        <input type="text" placeholder="Search machine no / part..." id="issue-search" oninput="filterIssues()" style="padding:7px 11px;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none;width:200px">
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Part Name</th><th>Machine No</th><th>Qty Issued</th><th>Unit</th><th>Issued To</th><th>Remarks</th><th>Del</th></tr></thead>
+        <tbody id="issue-body"><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:22px">No spare parts issued yet</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MACHINE-WISE SUMMARY -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">📊 Total Spares Issued — Machine Wise Summary</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Machine No</th><th>Total Issues</th><th>Parts Breakdown</th><th>Total Qty Issued</th></tr></thead>
+        <tbody id="machine-summary-body"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:22px">No issuance data yet</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- CHALLAN PRINT MODAL -->
+<div class="modal-overlay" id="challan-modal">
+  <div class="modal">
+    <div class="modal-header no-print">
+      <span class="modal-title">Challan Preview</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Print</button>
+        <button class="close-btn" onclick="document.getElementById('challan-modal').classList.remove('open')">✕</button>
+      </div>
+    </div>
+    <div id="challan-print-area"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== STATE =====
+let inwardStock = JSON.parse(localStorage.getItem('tx3-inward')   || '[]');
+let greyRolls   = JSON.parse(localStorage.getItem('tx3-grey')     || '[]');
+let qualityRecs = JSON.parse(localStorage.getItem('tx3-quality')  || '[]');
+let challans    = JSON.parse(localStorage.getItem('tx3-challans') || '[]');
+let spareParts  = JSON.parse(localStorage.getItem('tx3-spares')   || '[]');
+let spareIssues = JSON.parse(localStorage.getItem('tx3-issues')   || '[]');
+let challanCtr  = parseInt(localStorage.getItem('tx3-challan-ctr')|| '1000');
+
+function save() {
+  localStorage.setItem('tx3-inward',      JSON.stringify(inwardStock));
+  localStorage.setItem('tx3-grey',        JSON.stringify(greyRolls));
+  localStorage.setItem('tx3-quality',     JSON.stringify(qualityRecs));
+  localStorage.setItem('tx3-challans',    JSON.stringify(challans));
+  localStorage.setItem('tx3-spares',      JSON.stringify(spareParts));
+  localStorage.setItem('tx3-issues',      JSON.stringify(spareIssues));
+  localStorage.setItem('tx3-challan-ctr', challanCtr);
+}
+
+// ===== UTILS =====
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+function today() { return new Date().toISOString().split('T')[0]; }
+function uid()   { return Date.now() + Math.random().toString(36).slice(2,6); }
+function n(v)    { return parseFloat(v)||0; }
+
+document.getElementById('headerDate').textContent =
+  new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+['in-date','wb-date','gr-date','ch-date','sp-date','is-date'].forEach(id=>{
+  const el=document.getElementById(id); if(el) el.value=today();
+});
+
+// ===== NAV =====
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>{
+    const txt=b.textContent.toLowerCase();
+    b.classList.toggle('active',
+      (id==='dashboard'&&txt.includes('dashboard'))||
+      (id==='inward'&&txt.includes('inward'))||
+      (id==='grey'&&txt.includes('grey'))||
+      (id==='ready'&&txt.includes('ready'))||
+      (id==='challan'&&txt.includes('challan'))||
+      (id==='spares'&&txt.includes('spare'))
+    );
+  });
+  if(id==='dashboard') refreshDashboard();
+  if(id==='inward')    refreshInwardTable();
+  if(id==='grey')      { refreshGreyTable(); refreshGreySummary(); refreshGreyBeamDropdown(); qeInit(); }
+  if(id==='ready')     refreshReadyGrid();
+  if(id==='challan')   { refreshChallanItemGrid(); refreshChallanList(); }
+  if(id==='spares')    { refreshSpareTable(); refreshIssuePartDropdown(); refreshIssueTable(); refreshMachineSummary(); }
+}
+
+// ===== INWARD TYPE TOGGLE =====
+let currentType='yarn';
+function setType(t) {
+  currentType=t;
+  document.getElementById('btn-yarn').classList.toggle('active',t==='yarn');
+  document.getElementById('btn-beam').classList.toggle('active',t==='beam');
+  document.getElementById('yarn-fields').style.display=t==='yarn'?'':'none';
+  document.getElementById('beam-fields').style.display=t==='beam'?'':'none';
+}
+
+// ===== INWARD =====
+function addInward() {
+  let id, party, date, vehicle, lot, rate;
+
+  if(currentType==='yarn'){
+    id=document.getElementById('in-id').value.trim();
+    party=document.getElementById('in-party').value.trim();
+    date=document.getElementById('in-date').value||today();
+    vehicle=document.getElementById('in-vehicle').value.trim();
+    lot=document.getElementById('in-lot').value.trim();
+    rate=n(document.getElementById('in-rate').value);
+  } else {
+    id=document.getElementById('wb-beamno').value.trim();
+    party=document.getElementById('wb-party').value.trim();
+    date=document.getElementById('wb-date').value||today();
+    vehicle=document.getElementById('wb-vehicle').value.trim();
+    lot=document.getElementById('wb-lot').value.trim();
+    rate=n(document.getElementById('wb-rate').value);
+  }
+
+  if(!id||!party){toast('⚠️ Roll/Beam ID and Party are required');return;}
+  if(inwardStock.find(r=>r.id===id)){toast('⚠️ This ID already exists!');return;}
+  const common={id,party,type:currentType,date,vehicle,lot,rate,status:'In Stock',quality:null};
+  let extra={};
+  if(currentType==='yarn'){
+    const count=document.getElementById('yr-count').value.trim();
+    const ytype=document.getElementById('yr-type').value;
+    const wt=n(document.getElementById('yr-weight').value);
+    const qty=parseInt(document.getElementById('yr-qty').value)||1;
+    if(!count||!ytype||!wt){toast('⚠️ Yarn Count, Type and Weight required');return;}
+    extra={count,yarnType:ytype,ply:document.getElementById('yr-ply').value,twist:document.getElementById('yr-twist').value,
+      color:document.getElementById('yr-color').value.trim(),weightPerRoll:wt,qty,
+      coneType:document.getElementById('yr-cone').value,moisture:document.getElementById('yr-moisture').value,
+      length:document.getElementById('yr-length').value,shade:document.getElementById('yr-shade').value.trim(),
+      remarks:document.getElementById('yr-remarks').value.trim(),totalWeight:(wt*qty).toFixed(2)};
+  } else {
+    const count=document.getElementById('wb-count').value.trim();
+    const ytype=document.getElementById('wb-yarntype').value;
+    const ends=document.getElementById('wb-ends').value;
+    const length=document.getElementById('wb-length').value;
+    const loom=document.getElementById('wb-loom').value.trim();
+    if(!count||!ytype||!ends||!length){toast('⚠️ Count, Yarn Type, Ends and Length required');return;}
+    if(!loom){toast('⚠️ Loom / Machine No is required');return;}
+    extra={count,yarnType:ytype,beamNo:id,ends,
+      reed:document.getElementById('wb-reed').value,length,beamWeight:document.getElementById('wb-weight').value,
+      netYarnWt:document.getElementById('wb-netyarn').value,design:document.getElementById('wb-design').value.trim(),
+      epi:document.getElementById('wb-epi').value,material:document.getElementById('wb-material').value,
+      loom,remarks:document.getElementById('wb-remarks').value.trim()};
+  }
+  inwardStock.push({...common,...extra});
+  save(); refreshInwardTable(); refreshDashboard();
+  ['in-id','in-party','in-vehicle','in-lot','in-rate',
+   'yr-count','yr-twist','yr-color','yr-moisture','yr-length','yr-shade','yr-remarks','yr-weight',
+   'wb-beamno','wb-party','wb-vehicle','wb-lot','wb-rate',
+   'wb-count','wb-ends','wb-reed','wb-length','wb-weight','wb-netyarn','wb-design','wb-epi','wb-loom','wb-remarks']
+   .forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
+  document.getElementById('yr-qty').value='1';
+  document.getElementById('in-date').value=today();
+  document.getElementById('wb-date').value=today();
+  toast(`✅ ${currentType==='yarn'?'Yarn Roll':'Warp Beam'} ${id} added!`);
+}
+
+function refreshInwardTable(data) {
+  const rows=data||inwardStock;
+  const tbody=document.getElementById('inward-body');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:22px">No inward stock yet</td></tr>';return;}
+  tbody.innerHTML=rows.map(r=>{
+    const details=r.type==='yarn'?`${r.yarnType} · ${r.ply||''}ply · ${r.color||'—'}`:`Ends:${r.ends} · ${r.length}m · Loom:${r.loom||'—'}`;
+    const qty=r.type==='yarn'?`${r.qty} rolls / ${r.totalWeight}kg`:`${r.length}m`;
+    const stClass=r.status==='In Stock'?'s-in':r.status==='Ready'?'s-ready':r.status==='Sold'?'s-sold':'s-reject';
+    return `<tr>
+      <td><span class="type-tag ${r.type}">${r.type==='yarn'?'🧶 Yarn':'🪡 Beam'}</span></td>
+      <td><strong style="font-family:var(--mono)">${r.id}</strong></td>
+      <td>${r.party}</td><td><strong>${r.count}</strong></td>
+      <td style="font-size:11px;color:var(--muted)">${details}</td>
+      <td style="font-size:12px">${qty}</td>
+      <td>${r.rate?'₹'+r.rate:'—'}</td>
+      <td style="font-size:12px">${r.date}</td>
+      <td><span class="status-badge ${stClass}">${r.status}</span></td>
+      <td>${r.quality?`<span class="q-badge q-${r.quality}">${r.quality}</span>`:'—'}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteInward('${r.id}')">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterInward() {
+  const q=document.getElementById('inward-search').value.toLowerCase();
+  const t=document.getElementById('inward-filter-type').value;
+  refreshInwardTable(inwardStock.filter(r=>(!t||r.type===t)&&(!q||r.id.toLowerCase().includes(q)||r.party.toLowerCase().includes(q)||(r.count||'').toLowerCase().includes(q))));
+}
+
+function deleteInward(id) {
+  if(!confirm('Delete '+id+'?'))return;
+  inwardStock=inwardStock.filter(r=>r.id!==id);
+  qualityRecs=qualityRecs.filter(q=>!(q.itemType!=='grey'&&q.itemId===id));
+  save(); refreshInwardTable(); refreshDashboard(); toast('Deleted '+id);
+}
+
+// ===== QUICK ENTRY GRID (mill register style) =====
+const QE_COLS=['beamNo','lmNo','pieceNo','greyMtrs','weight','avgWt','stWt','diff','pick','quality','dsgNo','shdNo','selvedge','party','remark'];
+let qeRows=[];
+
+function qeBlankRow(){
+  const r={};
+  QE_COLS.forEach(c=>r[c]='');
+  return r;
+}
+
+function qeInit(){
+  if(!qeRows.length){ qeRows=[qeBlankRow()]; }
+  qeRender();
+}
+
+function qeRender(){
+  const tbody=document.getElementById('qe-body');
+  if(!tbody) return;
+  tbody.innerHTML=qeRows.map((row,idx)=>{
+    const cells=QE_COLS.map(col=>{
+      if(col==='quality'){
+        return `<td><select data-row="${idx}" data-col="${col}" onchange="qeUpdate(${idx},'${col}',this.value)" onkeydown="qeKeydown(event,${idx},${QE_COLS.indexOf(col)})">
+          <option value="" ${row[col]===''?'selected':''}></option>
+          <option value="Standard" ${row[col]==='Standard'?'selected':''}>Standard</option>
+          <option value="Second" ${row[col]==='Second'?'selected':''}>Second</option>
+          <option value="Defective" ${row[col]==='Defective'?'selected':''}>Defective</option>
+        </select></td>`;
+      }
+      const numCols=['greyMtrs','weight','avgWt','stWt','diff','pick'];
+      const type=numCols.includes(col)?'number':'text';
+      return `<td><input type="${type}" value="${row[col]}" data-row="${idx}" data-col="${col}"
+        oninput="qeUpdate(${idx},'${col}',this.value)"
+        onkeydown="qeKeydown(event,${idx},${QE_COLS.indexOf(col)})"></td>`;
+    }).join('');
+    return `<tr id="qe-row-${idx}">
+      <td class="qe-sno">${idx+1}</td>
+      ${cells}
+      <td class="qe-del"><button class="qe-del-btn" onclick="qeDeleteRow(${idx})" title="Delete row (F3)">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function qeUpdate(idx,col,val){
+  if(!qeRows[idx]) return;
+  qeRows[idx][col]=val;
+  // Auto-calc Diff = Weight - St-Wt if both present
+  if(col==='weight'||col==='stWt'){
+    const w=parseFloat(qeRows[idx].weight), s=parseFloat(qeRows[idx].stWt);
+    if(!isNaN(w)&&!isNaN(s)) qeRows[idx].diff=(w-s).toFixed(2);
+  }
+}
+
+function qeAddRow(){
+  qeRows.push(qeBlankRow());
+  qeRender();
+  // focus first cell of new row
+  setTimeout(()=>{
+    const newIdx=qeRows.length-1;
+    const el=document.querySelector(`[data-row="${newIdx}"][data-col="beamNo"]`);
+    if(el) el.focus();
+  },0);
+}
+
+function qeDeleteRow(idx){
+  if(qeRows.length===1){ qeRows=[qeBlankRow()]; qeRender(); return; }
+  qeRows.splice(idx,1);
+  qeRender();
+}
+
+function qeKeydown(e,idx,colIdx){
+  if(e.key==='F3'){
+    e.preventDefault();
+    qeDeleteRow(idx);
+    return;
+  }
+  if(e.key==='F1'){
+    e.preventDefault();
+    e.target.blur();
+    return;
+  }
+  if(e.key==='Enter'){
+    e.preventDefault();
+    const isLastRow=idx===qeRows.length-1;
+    const isLastCol=colIdx===QE_COLS.length-1;
+    if(isLastRow&&isLastCol){
+      qeAddRow();
+    } else if(isLastCol){
+      const el=document.querySelector(`[data-row="${idx+1}"][data-col="${QE_COLS[0]}"]`);
+      if(el) el.focus();
+    } else {
+      const el=document.querySelector(`[data-row="${idx}"][data-col="${QE_COLS[colIdx+1]}"]`);
+      if(el) el.focus();
+    }
+  }
+}
+
+function qeSaveAll(){
+  const validRows=qeRows.filter(r=>r.pieceNo&&r.pieceNo.trim()&&r.greyMtrs);
+  if(!validRows.length){toast('⚠️ Enter at least Piece No and Grey Mtrs in one row');return;}
+
+  let added=0, skipped=0;
+  validRows.forEach(r=>{
+    const no=r.pieceNo.trim();
+    if(greyRolls.find(g=>g.no===no)){ skipped++; return; }
+    const beam=inwardStock.find(b=>b.id===r.beamNo.trim()&&b.type==='beam');
+    const quality=r.quality||'';
+    greyRolls.push({
+      no, date: today(),
+      beam:r.beamNo.trim(), loom:r.lmNo.trim()||(beam?beam.loom:''),
+      weaver:'', lot:'',
+      construction:'', weave:'',
+      width:'', meters:n(r.greyMtrs),
+      weight:n(r.weight),
+      epi:'', ppi:'',
+      warpCount:'', weftCount:'', warpYarn:'', weftYarn:'',
+      rate:0,
+      quality: quality||null,
+      defect:'',
+      shrink:'', crimp:'',
+      remarks:r.remark.trim(),
+      status: (quality==='Standard'||quality==='Second') ? 'Ready' : 'In Stock',
+      challan:null,
+      avgWt:r.avgWt, stWt:r.stWt, diff:r.diff, pick:r.pick,
+      dsgNo:r.dsgNo, shdNo:r.shdNo, selvedge:r.selvedge, party:r.party
+    });
+    added++;
+  });
+
+  if(added){
+    save();
+    refreshGreyTable(); refreshGreySummary(); refreshDashboard();
+    qeRows=[qeBlankRow()];
+    qeRender();
+    toast(`✅ ${added} grey roll${added>1?'s':''} added to stock!${skipped?' ('+skipped+' skipped — duplicate Piece No)':''}`);
+  } else {
+    toast('⚠️ All Piece Nos already exist in stock — nothing added');
+  }
+}
+
+// ===== GREY ROLLS =====
+// ===== GREY ROLL: BEAM DROPDOWN (auto-fill loom from beam's inward record) =====
+function refreshGreyBeamDropdown() {
+  const sel=document.getElementById('gr-beam');
+  const beams=inwardStock.filter(r=>r.type==='beam');
+  const current=sel.value;
+  sel.innerHTML='<option value="">-- Select Beam (optional) --</option>'+
+    beams.map(b=>`<option value="${b.id}">${b.id} — ${b.count} ${b.yarnType}${b.loom?' (Loom: '+b.loom+')':''}</option>`).join('');
+  if(current) sel.value=current;
+}
+
+function onGreyBeamChange() {
+  const beamId=document.getElementById('gr-beam').value;
+  const beam=inwardStock.find(r=>r.id===beamId&&r.type==='beam');
+  document.getElementById('gr-loom').value = beam&&beam.loom ? beam.loom : '';
+}
+
+function addGreyRoll() {
+  const no=document.getElementById('gr-no').value.trim();
+  const meters=n(document.getElementById('gr-meters').value);
+  const width=document.getElementById('gr-width').value;
+  if(!no||!meters||!width){toast('⚠️ Grey Roll No, Width and Meters are required');return;}
+  if(greyRolls.find(g=>g.no===no)){toast('⚠️ Grey Roll number already exists!');return;}
+  const quality=document.getElementById('gr-quality').value;
+  const roll={
+    no, date:document.getElementById('gr-date').value||today(),
+    beam:document.getElementById('gr-beam').value.trim(),
+    loom:document.getElementById('gr-loom').value.trim(),
+    weaver:document.getElementById('gr-weaver').value.trim(),
+    lot:document.getElementById('gr-lot').value.trim(),
+    construction:document.getElementById('gr-construction').value.trim(),
+    weave:document.getElementById('gr-weave').value,
+    width, meters,
+    weight:n(document.getElementById('gr-weight').value),
+    epi:document.getElementById('gr-epi').value,
+    ppi:document.getElementById('gr-ppi').value,
+    warpCount:document.getElementById('gr-warp-count').value.trim(),
+    weftCount:document.getElementById('gr-weft-count').value.trim(),
+    warpYarn:document.getElementById('gr-warp-yarn').value.trim(),
+    weftYarn:document.getElementById('gr-weft-yarn').value.trim(),
+    rate:n(document.getElementById('gr-rate').value),
+    quality: quality||null,
+    defect:document.getElementById('gr-defect').value,
+    shrink:document.getElementById('gr-shrink').value,
+    crimp:document.getElementById('gr-crimp').value,
+    remarks:document.getElementById('gr-remarks').value.trim(),
+    status: (quality==='Standard'||quality==='Second') ? 'Ready' : 'In Stock',
+    challan: null
+  };
+  greyRolls.push(roll);
+  save(); refreshGreyTable(); refreshGreySummary(); refreshDashboard();
+  ['gr-no','gr-weaver','gr-lot','gr-construction','gr-width','gr-meters',
+   'gr-weight','gr-epi','gr-ppi','gr-warp-count','gr-weft-count','gr-warp-yarn','gr-weft-yarn',
+   'gr-rate','gr-shrink','gr-crimp','gr-remarks','gr-loom'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
+  document.getElementById('gr-beam').value='';
+  document.getElementById('gr-weave').value='';
+  document.getElementById('gr-quality').value='';
+  document.getElementById('gr-defect').value='';
+  document.getElementById('gr-date').value=today();
+  toast('🩶 Grey Roll '+no+' added to stock!');
+}
+
+function refreshGreyTable(data) {
+  const rows=data||greyRolls;
+  const tbody=document.getElementById('grey-body');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="15" style="text-align:center;color:var(--muted);padding:22px">No grey rolls added yet.</td></tr>';return;}
+  tbody.innerHTML=rows.map(r=>{
+    const stClass=r.status==='In Stock'?'s-in':r.status==='Ready'?'s-ready':r.status==='Sold'?'s-sold':'s-reject';
+    const qBadge=r.quality?`<span class="q-badge q-${r.quality}">${r.quality}</span>`:'<span style="font-size:11px;color:var(--muted)">Pending</span>';
+    return `<tr>
+      <td><strong style="font-family:var(--mono);color:#1f2937">${r.no}</strong></td>
+      <td style="font-size:12px">${r.date}</td>
+      <td style="font-size:12px">${r.beam||'—'}</td>
+      <td style="font-size:12px">${r.loom||'—'}</td>
+      <td>${r.weave||'—'}</td>
+      <td style="font-size:12px">${r.construction||'—'}</td>
+      <td>${r.width}"</td>
+      <td><strong>${r.meters}</strong> m</td>
+      <td>${r.weight?r.weight+' kg':'—'}</td>
+      <td style="font-size:11px">${r.epi?r.epi+'/':''} ${r.ppi||''}</td>
+      <td>${qBadge}</td>
+      <td style="font-size:11px;color:var(--danger)">${r.defect||'—'}</td>
+      <td>${r.rate?'₹'+r.rate+'/m':'—'}</td>
+      <td><span class="status-badge ${stClass}">${r.status}</span>${r.challan?'<br><span style="font-size:10px;color:var(--muted)">'+r.challan+'</span>':''}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteGrey('${r.no}')">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterGrey() {
+  const q=document.getElementById('grey-search').value.toLowerCase();
+  const grade=document.getElementById('grey-filter-grade').value;
+  const status=document.getElementById('grey-filter-status').value;
+  refreshGreyTable(greyRolls.filter(r=>
+    (!grade||r.quality===grade)&&
+    (!status||r.status===status)&&
+    (!q||r.no.toLowerCase().includes(q)||(r.weave||'').toLowerCase().includes(q)||(r.construction||'').toLowerCase().includes(q))
+  ));
+}
+
+function refreshGreySummary() {
+  const all=greyRolls;
+  document.getElementById('gs-total').textContent=all.length;
+  document.getElementById('gs-meters').textContent=all.reduce((s,r)=>s+r.meters,0).toFixed(1);
+  document.getElementById('gs-ready').textContent=all.filter(r=>r.status==='Ready').length;
+  document.getElementById('gs-sold').textContent=all.filter(r=>r.status==='Sold').length;
+}
+
+function deleteGrey(no) {
+  if(!confirm('Delete Grey Roll '+no+'?'))return;
+  greyRolls=greyRolls.filter(r=>r.no!==no);
+  save(); refreshGreyTable(); refreshGreySummary(); refreshDashboard(); toast('Grey Roll '+no+' deleted.');
+}
+
+// ===== READY =====
+function refreshReadyGrid() {
+  const ft=document.getElementById('ready-filter')?.value||'';
+  const fq=(document.getElementById('ready-search')?.value||'').toLowerCase();
+  const grid=document.getElementById('ready-grid');
+  let items=[];
+
+  // Grey rolls
+  if(!ft||ft==='grey') {
+    greyRolls.filter(r=>r.status==='Ready'&&(!fq||r.no.toLowerCase().includes(fq)||(r.weave||'').toLowerCase().includes(fq))).forEach(r=>{
+      items.push({_src:'grey',_id:r.no,r});
+    });
+  }
+  // Inward
+  if(!ft||ft==='yarn'||ft==='beam') {
+    inwardStock.filter(r=>r.status==='Ready'&&(!ft||r.type===ft)&&(!fq||r.id.toLowerCase().includes(fq)||r.party.toLowerCase().includes(fq))).forEach(r=>{
+      items.push({_src:r.type,_id:r.id,r});
+    });
+  }
+
+  if(!items.length){grid.innerHTML='<div style="color:var(--muted);padding:20px;grid-column:1/-1">No items ready to sell yet.</div>';return;}
+  grid.innerHTML=items.map(({_src,r})=>{
+    if(_src==='grey') return `<div class="grey-card">
+      <div style="margin-bottom:4px"><span class="type-tag grey">🩶 Grey Roll</span></div>
+      <div class="grey-roll-no">${r.no}</div>
+      <div class="item-detail">${r.weave||''} ${r.construction?'· '+r.construction:''}</div>
+      <div class="item-detail"><strong>${r.width}"</strong> wide · <strong>${r.meters} m</strong></div>
+      ${r.epi?'<div class="item-detail">EPI '+r.epi+(r.ppi?' / PPI '+r.ppi:'')+'</div>':''}
+      <div style="margin:5px 0"><span class="q-badge q-${r.quality}">${r.quality}</span></div>
+      ${r.rate?'<div class="item-detail">₹'+r.rate+'/m · Total ₹'+(r.rate*r.meters).toFixed(0)+'</div>':''}
+    </div>`;
+    return `<div class="item-card">
+      <div style="margin-bottom:4px"><span class="type-tag ${r.type}">${r.type==='yarn'?'🧶 Yarn Roll':'🪡 Warp Beam'}</span></div>
+      <div class="item-no">${r.id}</div>
+      <div class="item-detail">${r.party}</div>
+      <div class="item-detail"><strong>${r.count}</strong> · ${r.yarnType}</div>
+      ${r.type==='yarn'?`<div class="item-detail">${r.qty} rolls · ${r.totalWeight}kg</div>`:`<div class="item-detail">${r.length}m · ${r.ends} ends</div>`}
+      <div style="margin-top:5px"><span class="q-badge q-${r.quality}">${r.quality}</span></div>
+    </div>`;
+  }).join('');
+}
+
+// ===== CHALLAN =====
+let selectedItems=new Set();
+
+function refreshChallanItemGrid() {
+  selectedItems.clear();
+  document.getElementById('selected-count').textContent='0';
+  const grid=document.getElementById('ch-item-grid');
+  let html='';
+
+  // Grey rolls first (primary product)
+  const readyGrey=greyRolls.filter(r=>r.status==='Ready');
+  const readyInward=inwardStock.filter(r=>r.status==='Ready');
+
+  if(!readyGrey.length&&!readyInward.length){grid.innerHTML='<div style="color:var(--muted);padding:20px;grid-column:1/-1">No ready items available.</div>';return;}
+
+  if(readyGrey.length){
+    html+=`<div style="grid-column:1/-1;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--grey);padding:4px 0 2px;border-bottom:1px dashed var(--border);margin-bottom:4px">🩶 Grey Rolls (Finished Product)</div>`;
+    html+=readyGrey.map(r=>`
+      <div class="grey-card" id="ci-grey-${r.no}" onclick="toggleItem('grey:${r.no}')">
+        <div style="margin-bottom:3px"><span class="type-tag grey">🩶 Grey Roll</span></div>
+        <div class="grey-roll-no">${r.no}</div>
+        <div class="item-detail">${r.weave||''} ${r.construction?'· '+r.construction:''}</div>
+        <div class="item-detail"><strong>${r.width}"</strong> · <strong>${r.meters} m</strong></div>
+        <div style="margin:4px 0"><span class="q-badge q-${r.quality}">${r.quality}</span></div>
+        ${r.rate?'<div class="item-detail">₹'+r.rate+'/m</div>':''}
+      </div>`).join('');
+  }
+  if(readyInward.length){
+    html+=`<div style="grid-column:1/-1;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);padding:8px 0 2px;border-bottom:1px dashed var(--border);margin-bottom:4px">Yarn Rolls / Warp Beams (Inward)</div>`;
+    html+=readyInward.map(r=>`
+      <div class="item-card" id="ci-in-${r.id}" onclick="toggleItem('in:${r.id}')">
+        <div style="margin-bottom:3px"><span class="type-tag ${r.type}">${r.type==='yarn'?'🧶 Yarn':'🪡 Beam'}</span></div>
+        <div class="item-no">${r.id}</div>
+        <div class="item-detail">${r.party}</div>
+        <div class="item-detail"><strong>${r.count}</strong></div>
+        <div style="margin:4px 0"><span class="q-badge q-${r.quality}">${r.quality}</span></div>
+      </div>`).join('');
+  }
+  grid.innerHTML=html;
+}
+
+function toggleItem(key) {
+  const isGrey=key.startsWith('grey:');
+  const elemId=isGrey?'ci-grey-'+key.slice(5):'ci-in-'+key.slice(3);
+  const el=document.getElementById(elemId);
+  if(!el)return;
+  if(selectedItems.has(key)){selectedItems.delete(key);el.classList.remove('selected');}
+  else{selectedItems.add(key);el.classList.add('selected');}
+  document.getElementById('selected-count').textContent=selectedItems.size;
+}
+
+function createChallan() {
+  const party=document.getElementById('ch-party').value.trim();
+  if(!party){toast('⚠️ Enter customer/party name');return;}
+  if(!selectedItems.size){toast('⚠️ Select at least one item');return;}
+  challanCtr++;
+  const no='CH-'+challanCtr;
+  const items=Array.from(selectedItems).map(key=>{
+    if(key.startsWith('grey:')) {
+      const r=greyRolls.find(x=>x.no===key.slice(5));
+      return r?{_type:'grey',...r}:null;
+    } else {
+      const r=inwardStock.find(x=>x.id===key.slice(3));
+      return r?{_type:'inward',...r}:null;
+    }
+  }).filter(Boolean);
+
+  const challan={no,party,address:document.getElementById('ch-address').value.trim(),
+    gst:document.getElementById('ch-gst').value.trim(),vehicle:document.getElementById('ch-vehicle').value.trim(),
+    date:document.getElementById('ch-date').value||today(),remarks:document.getElementById('ch-remarks').value.trim(),
+    items:items.map(r=>({...r}))};
+  challans.push(challan);
+
+  // Mark as sold
+  items.forEach(r=>{
+    if(r._type==='grey'){const g=greyRolls.find(x=>x.no===r.no);if(g){g.status='Sold';g.challan=no;}}
+    else{const i=inwardStock.find(x=>x.id===r.id);if(i){i.status='Sold';i.challan=no;}}
+  });
+  save(); refreshChallanList(); refreshChallanItemGrid(); refreshDashboard();
+  ['ch-party','ch-address','ch-gst','ch-vehicle','ch-remarks'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('ch-date').value=today();
+  toast('✅ Challan '+no+' generated!');
+  printChallan(challan);
+}
+
+function refreshChallanList() {
+  const tbody=document.getElementById('challan-body');
+  if(!challans.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:22px">No challans yet</td></tr>';return;}
+  tbody.innerHTML=challans.slice().reverse().map(c=>{
+    const totalMeters=c.items.reduce((s,r)=>s+(r._type==='grey'?r.meters:0),0);
+    return `<tr>
+      <td><strong style="font-family:var(--mono)">${c.no}</strong></td>
+      <td>${c.party}</td><td>${c.address||'—'}</td>
+      <td>${c.items.length} items</td>
+      <td>${totalMeters>0?totalMeters.toFixed(1)+' m':'—'}</td>
+      <td>${c.date}</td>
+      <td><button class="btn btn-outline btn-sm" onclick='printChallan(${JSON.stringify(c).replace(/'/g,"&#39;")})'>🖨 Print</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function printChallan(c) {
+  const rows=c.items.map((r,i)=>{
+    const isGrey=r._type==='grey';
+    const typeTag=isGrey?'<span style="background:#f3f4f6;border:1px solid #d1d5db;color:#374151;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700">🩶 Grey Roll</span>':
+      `<span style="background:${r.type==='yarn'?'#fef3c7':'#ecfeff'};color:${r.type==='yarn'?'#b45309':'#0e7490'};padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700">${r.type==='yarn'?'🧶 Yarn':'🪡 Beam'}</span>`;
+    const id=isGrey?r.no:r.id;
+    const desc=isGrey?`${r.weave||''} ${r.construction||''} ${r.width}"`:
+      (r.type==='yarn'?`${r.yarnType} ${r.count} ${r.ply}ply`:`${r.yarnType} ${r.count} ${r.ends} ends`);
+    const qty=isGrey?`${r.meters} m`:(r.type==='yarn'?`${r.qty} rolls / ${r.totalWeight}kg`:`${r.length}m`);
+    const grade=isGrey?r.quality:(r.quality||'—');
+    const amt=isGrey&&r.rate?(r.rate*r.meters).toFixed(2):'—';
+    return `<tr>
+      <td>${i+1}</td><td>${typeTag}</td>
+      <td style="font-family:var(--mono);font-weight:700">${id}</td>
+      <td style="font-size:11px">${desc}</td>
+      <td><span style="padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700;background:${grade==='Standard'?'#dcfce7':grade==='A'?'#dcfce7':grade==='Second'||grade==='B'?'#fef9c3':'#fee2e2'};color:${grade==='Standard'||grade==='A'?'#15803d':grade==='Second'||grade==='B'?'#a16207':'#b91c1c'}">${grade}</span></td>
+      <td style="text-align:center">${qty}</td>
+      <td style="text-align:right">${r.rate?'₹'+r.rate:'—'}</td>
+      <td style="text-align:right">${amt!=='—'?'₹'+amt:'—'}</td>
+    </tr>`;
+  }).join('');
+  const totalMeters=c.items.filter(r=>r._type==='grey').reduce((s,r)=>s+r.meters,0);
+  const totalAmt=c.items.filter(r=>r._type==='grey'&&r.rate).reduce((s,r)=>s+(r.rate*r.meters),0);
+  document.getElementById('challan-print-area').innerHTML=`
+  <div class="challan-box">
+    <div class="challan-header">
+      <div>
+        <div class="challan-co">🧵 TextilePro</div>
+        <div class="challan-co-sub">Grey Roll · Yarn Roll · Warp Beam Management</div>
+      </div>
+      <div class="challan-title" style="text-align:right">
+        <h2>DELIVERY CHALLAN</h2>
+        <div class="challan-no">No: ${c.no} &nbsp;|&nbsp; Date: ${c.date}</div>
+        ${c.vehicle?'<div class="challan-no">Vehicle: '+c.vehicle+'</div>':''}
+      </div>
+    </div>
+    <hr class="challan-divider">
+    <div class="challan-party">
+      <div class="challan-party-block">
+        <label>To (Customer / Party)</label>
+        <div class="value">${c.party}</div>
+        ${c.address?'<div style="font-size:12px;color:var(--muted);margin-top:3px">'+c.address+'</div>':''}
+        ${c.gst?'<div style="font-size:12px;margin-top:3px">GST/Mobile: '+c.gst+'</div>':''}
+      </div>
+      <div class="challan-party-block">
+        <label>Summary</label>
+        <div class="value">${c.items.length} Items Dispatched</div>
+        <div style="font-size:12px;margin-top:3px">Grey Rolls: ${c.items.filter(r=>r._type==='grey').length} &nbsp;|&nbsp; Total: ${totalMeters.toFixed(1)} m</div>
+        ${totalAmt>0?'<div style="font-size:12px;font-weight:700">Amount: ₹'+totalAmt.toFixed(2)+'</div>':''}
+        ${c.remarks?'<div style="font-size:11px;color:var(--muted);margin-top:2px">Note: '+c.remarks+'</div>':''}
+      </div>
+    </div>
+    <table class="challan-table">
+      <thead><tr><th>#</th><th>Type</th><th>Roll No</th><th>Description</th><th>Grade</th><th style="text-align:center">Qty / Meters</th><th style="text-align:right">Rate</th><th style="text-align:right">Amount</th></tr></thead>
+      <tbody>${rows}
+        <tr style="background:#f5f1ea">
+          <td colspan="5" style="font-weight:700;text-align:right">TOTAL</td>
+          <td style="text-align:center;font-weight:700">${totalMeters.toFixed(1)} m</td>
+          <td></td>
+          <td style="text-align:right;font-weight:700">${totalAmt>0?'₹'+totalAmt.toFixed(2):'—'}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="challan-footer">
+      <div><div class="sig-line">Receiver's Signature &amp; Stamp</div></div>
+      <div><div class="sig-line">Authorised Signatory</div></div>
+    </div>
+  </div>`;
+  document.getElementById('challan-modal').classList.add('open');
+}
+
+// ===== SPARE PARTS =====
+function addSpare() {
+  const name=document.getElementById('sp-name').value.trim();
+  const qty=parseInt(document.getElementById('sp-qty').value)||0;
+  if(!name||!qty){toast('⚠️ Part Name and Quantity required');return;}
+  spareParts.push({id:uid(),name,qty,code:document.getElementById('sp-code').value.trim(),
+    machine:document.getElementById('sp-machine').value,unit:document.getElementById('sp-unit').value,
+    supplier:document.getElementById('sp-supplier').value.trim(),cost:n(document.getElementById('sp-cost').value),
+    min:parseInt(document.getElementById('sp-min').value)||0,date:document.getElementById('sp-date').value||today(),
+    remarks:document.getElementById('sp-remarks').value.trim()});
+  save(); refreshSpareTable(); refreshDashboard(); refreshIssuePartDropdown();
+  ['sp-name','sp-code','sp-supplier','sp-cost','sp-min','sp-remarks','sp-qty'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('sp-machine').value='';document.getElementById('sp-date').value=today();
+  toast('✅ '+name+' added to spare parts!');
+}
+
+function totalIssuedFor(partId) {
+  return spareIssues.filter(i=>i.partId===partId).reduce((s,i)=>s+i.qty,0);
+}
+
+function refreshSpareTable(data) {
+  const rows=data||spareParts;
+  const tbody=document.getElementById('spare-body');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:22px">No spare parts yet</td></tr>';return;}
+  tbody.innerHTML=rows.map(p=>{
+    const low=p.min>0&&p.qty<=p.min;
+    const issued=totalIssuedFor(p.id);
+    return `<tr>
+      <td><strong>${p.name}</strong>${p.remarks?'<br><span style="font-size:11px;color:var(--muted)">'+p.remarks+'</span>':''}</td>
+      <td style="font-family:var(--mono);font-size:11px">${p.code||'—'}</td>
+      <td>${p.machine||'—'}</td>
+      <td style="font-weight:700;color:${low?'var(--danger)':'inherit'}">${p.qty}</td>
+      <td style="font-weight:700;color:var(--spare)">${issued||'—'}</td>
+      <td>${p.unit}</td><td>${p.supplier||'—'}</td>
+      <td>${p.cost?'₹'+p.cost:'—'}</td>
+      <td>${p.cost?'₹'+(p.cost*p.qty).toFixed(2):'—'}</td>
+      <td>${low?'<span style="color:var(--danger);font-size:11px;font-weight:700">⚠️ LOW</span>':'<span style="color:var(--warp);font-size:11px;font-weight:700">✓ OK</span>'}</td>
+      <td style="display:flex;gap:3px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="adjSpare('${p.id}',1)">+</button>
+        <button class="btn btn-outline btn-sm" onclick="adjSpare('${p.id}',-1)">−</button>
+        <button class="btn btn-danger btn-sm" onclick="delSpare('${p.id}')">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterSpares() {
+  const q=document.getElementById('spare-search').value.toLowerCase();
+  refreshSpareTable(spareParts.filter(p=>p.name.toLowerCase().includes(q)||(p.code||'').toLowerCase().includes(q)||(p.machine||'').toLowerCase().includes(q)));
+}
+
+function adjSpare(id,delta) {
+  const p=spareParts.find(s=>s.id===id);if(!p)return;
+  const qv=parseInt(prompt(`${delta>0?'Add to':'Use from'} "${p.name}" (current: ${p.qty} ${p.unit})\nEnter quantity:`));
+  if(isNaN(qv)||qv<=0)return;
+  p.qty=Math.max(0,p.qty+delta*qv);
+  save();refreshSpareTable();toast(`${delta>0?'➕ Added':'➖ Used'} ${qv} ${p.unit} of ${p.name}. Stock: ${p.qty}`);
+}
+
+function delSpare(id) {
+  if(!confirm('Delete this spare part? Its issuance history will remain for record.'))return;
+  spareParts=spareParts.filter(s=>s.id!==id);
+  save();refreshSpareTable();refreshDashboard();refreshIssuePartDropdown();toast('Spare part deleted.');
+}
+
+// ===== ISSUE TO MACHINE =====
+function refreshIssuePartDropdown() {
+  const sel=document.getElementById('is-part');
+  if(!sel) return;
+  const current=sel.value;
+  sel.innerHTML='<option value="">-- Select Part --</option>'+
+    spareParts.map(p=>`<option value="${p.id}">${p.name}${p.code?' ('+p.code+')':''} — ${p.qty} ${p.unit} in stock</option>`).join('');
+  if(current) sel.value=current;
+  onIssuePartChange();
+}
+
+function onIssuePartChange() {
+  const id=document.getElementById('is-part').value;
+  const p=spareParts.find(s=>s.id===id);
+  document.getElementById('is-available').value = p ? `${p.qty} ${p.unit}` : '';
+}
+
+function issueSpare() {
+  const partId=document.getElementById('is-part').value;
+  const machineNo=document.getElementById('is-machineno').value.trim();
+  const qty=parseInt(document.getElementById('is-qty').value)||0;
+  if(!partId||!machineNo||!qty){toast('⚠️ Select Part, Machine No and Quantity are required');return;}
+  const p=spareParts.find(s=>s.id===partId);
+  if(!p){toast('⚠️ Part not found');return;}
+  if(qty>p.qty){toast(`⚠️ Only ${p.qty} ${p.unit} available in stock — cannot issue ${qty}`);return;}
+
+  p.qty -= qty;
+  spareIssues.push({
+    id:uid(), partId, partName:p.name, unit:p.unit, machineNo, qty,
+    date:document.getElementById('is-date').value||today(),
+    person:document.getElementById('is-person').value.trim(),
+    remarks:document.getElementById('is-remarks').value.trim()
+  });
+  save();
+  refreshSpareTable(); refreshIssueTable(); refreshMachineSummary(); refreshIssuePartDropdown(); refreshDashboard();
+  ['is-machineno','is-qty','is-person','is-remarks'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('is-part').value='';
+  document.getElementById('is-available').value='';
+  document.getElementById('is-date').value=today();
+  toast(`🏭 Issued ${qty} ${p.unit} of ${p.name} to Machine ${machineNo}`);
+}
+
+function refreshIssueTable(data) {
+  const rows=data||spareIssues;
+  const tbody=document.getElementById('issue-body');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:22px">No spare parts issued yet</td></tr>';return;}
+  tbody.innerHTML=rows.slice().reverse().map(i=>`<tr>
+      <td style="font-size:12px">${i.date}</td>
+      <td><strong>${i.partName}</strong></td>
+      <td><span class="type-tag grey">${i.machineNo}</span></td>
+      <td style="font-weight:700">${i.qty}</td>
+      <td>${i.unit}</td>
+      <td>${i.person||'—'}</td>
+      <td style="font-size:12px">${i.remarks||'—'}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteIssue('${i.id}')">🗑</button></td>
+    </tr>`).join('');
+}
+
+function filterIssues() {
+  const q=document.getElementById('issue-search').value.toLowerCase();
+  refreshIssueTable(spareIssues.filter(i=>i.machineNo.toLowerCase().includes(q)||i.partName.toLowerCase().includes(q)));
+}
+
+function deleteIssue(id) {
+  const rec=spareIssues.find(i=>i.id===id);
+  if(!rec)return;
+  if(!confirm(`Delete this issuance? ${rec.qty} ${rec.unit} of ${rec.partName} will be returned to stock.`))return;
+  const p=spareParts.find(s=>s.id===rec.partId);
+  if(p) p.qty += rec.qty;
+  spareIssues=spareIssues.filter(i=>i.id!==id);
+  save(); refreshIssueTable(); refreshSpareTable(); refreshMachineSummary(); refreshIssuePartDropdown(); refreshDashboard();
+  toast('Issuance record deleted and quantity returned to stock.');
+}
+
+function refreshMachineSummary() {
+  const tbody=document.getElementById('machine-summary-body');
+  if(!spareIssues.length){tbody.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:22px">No issuance data yet</td></tr>';return;}
+  const byMachine={};
+  spareIssues.forEach(i=>{
+    if(!byMachine[i.machineNo]) byMachine[i.machineNo]={count:0,totalQty:0,parts:{}};
+    byMachine[i.machineNo].count++;
+    byMachine[i.machineNo].totalQty+=i.qty;
+    const key=i.partName+' ('+i.unit+')';
+    byMachine[i.machineNo].parts[key]=(byMachine[i.machineNo].parts[key]||0)+i.qty;
+  });
+  const machines=Object.keys(byMachine).sort();
+  tbody.innerHTML=machines.map(m=>{
+    const d=byMachine[m];
+    const breakdown=Object.entries(d.parts).map(([k,v])=>`${k}: <strong>${v}</strong>`).join(', ');
+    return `<tr>
+      <td><span class="type-tag grey">${m}</span></td>
+      <td style="font-weight:700">${d.count}</td>
+      <td style="font-size:12px">${breakdown}</td>
+      <td style="font-weight:700;color:var(--spare)">${d.totalQty}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ===== DASHBOARD =====
+function refreshDashboard() {
+  document.getElementById('stat-yarn').textContent=inwardStock.filter(r=>r.type==='yarn').length;
+  document.getElementById('stat-beam').textContent=inwardStock.filter(r=>r.type==='beam').length;
+  document.getElementById('stat-grey').textContent=greyRolls.filter(r=>r.status!=='Sold').length;
+  document.getElementById('stat-ready').textContent=greyRolls.filter(r=>r.status==='Ready').length+inwardStock.filter(r=>r.status==='Ready').length;
+  document.getElementById('stat-spare').textContent=spareParts.length;
+  document.getElementById('stat-challan').textContent=challans.length;
+
+  const ib=document.getElementById('dash-inward-body');
+  const ri=inwardStock.slice(-5).reverse();
+  ib.innerHTML=ri.length?ri.map(r=>`<tr>
+    <td><strong style="font-family:var(--mono);font-size:12px">${r.id}</strong></td>
+    <td><span class="type-tag ${r.type}">${r.type==='yarn'?'🧶':'🪡'}</span></td>
+    <td style="font-size:12px">${r.party}</td>
+    <td><span class="status-badge ${r.status==='In Stock'?'s-in':r.status==='Ready'?'s-ready':'s-sold'}">${r.status}</span></td>
+  </tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">No records yet</td></tr>';
+
+  const gb=document.getElementById('dash-grey-body');
+  const rg=greyRolls.slice(-5).reverse();
+  gb.innerHTML=rg.length?rg.map(r=>`<tr>
+    <td><strong style="font-family:var(--mono);font-size:12px">${r.no}</strong></td>
+    <td style="font-size:12px">${r.weave||'—'}</td>
+    <td><strong>${r.meters}</strong> m</td>
+    <td>${r.quality?`<span class="q-badge q-${r.quality}">${r.quality}</span>`:'<span style="font-size:11px;color:var(--muted)">Pending</span>'}</td>
+  </tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">No grey rolls yet</td></tr>';
+
+  const cb=document.getElementById('dash-challan-body');
+  const rc=challans.slice(-5).reverse();
+  cb.innerHTML=rc.length?rc.map(c=>`<tr>
+    <td><strong style="font-family:var(--mono);font-size:12px">${c.no}</strong></td>
+    <td style="font-size:12px">${c.party}</td>
+    <td>${c.items.length}</td>
+    <td style="font-size:12px">${c.date}</td>
+  </tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">No challans yet</td></tr>';
+}
+
+// Init
+refreshDashboard();
+</script>
+</body>
+</html>
