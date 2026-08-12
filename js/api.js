@@ -1,6 +1,4 @@
-const hostname = window.location.hostname || 'localhost';
-const protocol = window.location.protocol === 'file:' ? 'http:' : window.location.protocol;
-const BASE = `${protocol}//${hostname}:5000/api`;
+const BASE = window.location.protocol === 'file:' ? 'http://localhost:5000/api' : '/api';
 
 export async function sendRequest(endpoint, method = 'GET', data = null) {
     const config = {
