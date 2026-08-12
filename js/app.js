@@ -74,6 +74,7 @@ function setupLogin() {
 
         loginError.textContent = '';
         await renderAuthUI();
+        await window.showPage('dashboard');
     });
 }
 
