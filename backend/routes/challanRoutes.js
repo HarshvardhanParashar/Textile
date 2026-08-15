@@ -22,9 +22,17 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Party Name and at least 1 item are required' });
     }
 
-    // Auto-generate Challan Number (e.g. CH-1001, CH-1002)
-    const count = await Challan.countDocuments();
-    const challanNo = `CH-${1001 + count}`;
+    // Secure Challan Number generation (prevents duplicate key conflicts)
+    const latestChallan = await Challan.findOne().sort({ createdAt: -1 });
+    let nextNum = 1001;
+
+    if (latestChallan && latestChallan.challanNo) {
+      const match = latestChallan.challanNo.match(/\d+/);
+      if (match) {
+        nextNum = parseInt(match[0], 10) + 1;
+      }
+    }
+    const challanNo = `CH-${nextNum}`;
 
     const totalMeters = items.reduce((acc, item) => acc + (Number(item.meters) || 0), 0);
 
