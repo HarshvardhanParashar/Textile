@@ -151,9 +151,12 @@ async function generateChallan() {
     return showToast('Please select at least 1 ready item for the challan', 'error');
   }
 
+  // Map selected items including their ID and source ('readytosell' vs 'greyrolls')
   const selectedItems = readyRollsList
     .filter(r => selectedRollIds.has(r.id || r._id))
     .map(r => ({
+      _id: r._id || r.id,
+      source: r.itemCode ? 'readytosell' : 'greyrolls', // tracks item origin
       rollNo: r.rollNo,
       quality: r.quality || '',
       meters: r.meters || 0,
@@ -171,15 +174,29 @@ async function generateChallan() {
   };
 
   try {
+    // 1. Create the Challan
     await sendRequest('challans', 'POST', payload);
-    showToast('Challan Generated Successfully!');
+
+    // 2. Delete/Remove used items from their respective endpoints so they disappear from stock
+    await Promise.allSettled(
+      selectedItems.map(item => {
+        if (item.source === 'readytosell') {
+          return sendRequest(`readytosell/${item._id}`, 'DELETE');
+        } else {
+          // Soft-delete by setting status to 'Dispatched', or call DELETE endpoint
+          return sendRequest(`greyrolls/${item._id}`, 'PUT', { status: 'Dispatched' })
+            .catch(() => sendRequest(`greyrolls/${item._id}`, 'DELETE'));
+        }
+      })
+    );
+
+    showToast('Challan Generated & Items Removed from Stock!');
     clearChallanForm();
-    await renderChallanPage();
+    await renderChallanPage(); // Reload list to reflect changes
   } catch (err) {
     showToast(err.message || 'Failed to generate challan', 'error');
   }
 }
-
 async function loadIssuedChallans() {
   const tbody = document.getElementById('issued-challans-body');
   try {
