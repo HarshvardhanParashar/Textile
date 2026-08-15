@@ -18,6 +18,6 @@ const ChallanSchema = new mongoose.Schema({
   items: [ChallanItemSchema],
   totalMeters: { type: Number, default: 0 },
   totalItems: { type: Number, default: 0 }
-}, { timestamps: true });
+}, { timestamps: true, autoIndex: false });
 
 export default mongoose.model('Challan', ChallanSchema);
