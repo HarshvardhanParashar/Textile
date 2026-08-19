@@ -80,7 +80,7 @@ router.post('/', async (req, res) => {
 
     await challan.save({ session });
 
-    // 🔴 REMOVE / DELETE SELECTED ROLLS FROM INVENTORY
+    //  REMOVE / DELETE SELECTED ROLLS FROM INVENTORY
     const rollIds = items.map(item => item._id || item.id).filter(Boolean);
 
     if (rollIds.length > 0) {
