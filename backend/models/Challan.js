@@ -8,7 +8,8 @@ const ChallanItemSchema = new mongoose.Schema({
 });
 
 const ChallanSchema = new mongoose.Schema({
-  challanNo: { type: String, required: true, unique: true },
+  no: { type: String }, // 👈 Keep this so Mongoose doesn't drop the 'no' property
+  challanNo: { type: String, required: true },
   partyName: { type: String, required: true },
   address: { type: String, default: '' },
   gstOrMobile: { type: String, default: '' },
@@ -18,6 +19,6 @@ const ChallanSchema = new mongoose.Schema({
   items: [ChallanItemSchema],
   totalMeters: { type: Number, default: 0 },
   totalItems: { type: Number, default: 0 }
-}, { timestamps: true, autoIndex: false });
+}, { timestamps: true });
 
 export default mongoose.model('Challan', ChallanSchema);
