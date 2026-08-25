@@ -37,6 +37,26 @@ router.put('/:id', async (req, res) => {
         res.status(400).json({ error: err.message });
     }
 });
+// GET yarn details by beam number from Inward Stock
+router.get('/beam/:beamNo', async (req, res) => {
+  try {
+    const inwardData = await Inward.findOne({
+      $or: [
+        { beamNo: req.params.beamNo },
+        { id: req.params.beamNo },
+        { itemCode: req.params.beamNo }
+      ]
+    });
+
+    if (!inwardData) {
+      return res.status(404).json({ error: 'Beam Number not found in Inward Stock' });
+    }
+
+    res.json(inwardData);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // 🗑️ DELETE: Remove entry by ID
 router.delete('/:id', async (req, res) => {
