@@ -23,8 +23,8 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const app = express();
-// Use localhost for local development; Render can override HOST with 0.0.0.0.
-const HOST = process.env.HOST || 'localhost';
+// Bind all interfaces so Render and localhost can reach the server.
+const HOST = process.env.HOST || '0.0.0.0';
 const PORT = process.env.PORT || 5000;
 const connString = process.env.MONGO_URI || process.env.MONGODB_URI;
 
