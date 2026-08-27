@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TextilePro — Global Enterprise Management</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="loginScreen" class="login-screen">
+        <div class="login-card">
+            <div class="login-brand">
+                <div class="login-logo">🧵</div>
+                <div>
+                    <div class="login-title">TextilePro</div>
+                    <div class="login-subtitle">Secure Administration Portal</div>
+                </div>
+            </div>
+
+            <form id="loginForm" class="login-form">
+                <label class="login-label" for="loginUsername">Username</label>
+                <input id="loginUsername" type="text" placeholder="Enter username" required>
+
+                <label class="login-label" for="loginPassword">Password</label>
+                <input id="loginPassword" type="password" placeholder="Enter password" required>
+
+                <button type="submit" class="btn btn-primary login-btn">Login</button>
+                <div id="loginError" class="login-error"></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="appShell" class="app-shell hidden">
+        <header>
+            <div class="brand">
+                <span style="font-size:22px">🧵</span>
+                <div>
+                    <div class="brand-name">TextilePro</div>
+                    <div class="brand-sub">Cloud Integrated Architecture Matrix</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="header-date" id="headerDate"></div>
+                <button id="logoutBtn" class="btn logout-btn btn-sm">Logout</button>
+            </div>
+        </header>
+
+        <nav id="mainNav">
+            <button class="nav-btn active" data-page="dashboard">📊 Dashboard</button>
+            <button class="nav-btn" data-page="inward">📥 Inward Stock</button>
+            <button class="nav-btn" data-page="grey">🩶 Grey Roll Stock</button>
+            <button class="nav-btn" data-page="ready">📦 Ready to Sell</button>
+            <button class="nav-btn" data-page="challan">🧾 Challan</button>
+            <button class="nav-btn" data-page="spares">🔧 Spare Parts</button>
+        </nav>
+
+        <main>
+        <!-- ======= DASHBOARD ======= -->
+<div class="page active" id="page-dashboard">
+  <div class="section-title">Dashboard</div>
+  <div class="section-sub">Live overview of your textile business</div>
+
+  <div id="adminUserCard" class="card admin-user-card hidden">
+    <div class="card-header">
+      <span class="card-title">Super Admin: Add New User</span>
+    </div>
+
+    <div class="admin-form-grid">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input id="adminName" type="text" placeholder="e.g. Rahul Sharma">
+      </div>
+      <div class="form-group">
+        <label>Username</label>
+        <input id="adminUsername" type="text" placeholder="Enter username">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input id="adminPassword" type="password" placeholder="Enter password">
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="adminRole">
+          <option value="user">User</option>
+          <option value="super_admin">Super Admin</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="admin-actions">
+      <button id="createUserBtn" class="btn btn-primary">Add User</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Username</th>
+            <th>Role</th>
+          </tr>
+        </thead>
+        <tbody id="userTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card s-yarn">
+      <div class="stat-label">🧶 Yarn Rolls</div>
+      <div class="stat-value" id="stat-yarn">0</div>
+      <div class="stat-sub">Inward received</div>
+    </div>
+    <div class="stat-card s-beam">
+      <div class="stat-label">🪡 Warp Beams</div>
+      <div class="stat-value" id="stat-beam">0</div>
+      <div class="stat-sub">Inward received</div>
+    </div>
+    <div class="stat-card s-grey">
+      <div class="stat-label">🩶 Grey Rolls</div>
+      <div class="stat-value" id="stat-grey">0</div>
+      <div class="stat-sub">Finish product in stock</div>
+    </div>
+    <div class="stat-card s-ready">
+      <div class="stat-label">📦 Ready to Sell</div>
+      <div class="stat-value" id="stat-ready">0</div>
+      <div class="stat-sub">Quality passed grey rolls</div>
+    </div>
+    <div class="stat-card s-spare">
+      <div class="stat-label">🔧 Spare Parts</div>
+      <div class="stat-value" id="stat-spare">0</div>
+      <div class="stat-sub">Items in stock</div>
+    </div>
+    <div class="stat-card s-challan">
+      <div class="stat-label">🧾 Challans</div>
+      <div class="stat-value" id="stat-challan">0</div>
+      <div class="stat-sub">Issued so far</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Recent Inward Stock</span>
+        <button class="btn btn-outline btn-sm" onclick="showPage('inward')">View All</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>ID</th><th>Type</th><th>Party</th><th>Status</th></tr></thead>
+        <tbody id="dash-inward-body"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">No records yet</td></tr></tbody></table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Grey Roll Stock</span>
+        <button class="btn btn-outline btn-sm" onclick="showPage('grey')">View All</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Roll No</th><th>Design</th><th>Meters</th><th>Grade</th></tr></thead>
+        <tbody id="dash-grey-body"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">No grey rolls yet</td></tr></tbody></table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Recent Challans</span>
+        <button class="btn btn-outline btn-sm" onclick="showPage('challan')">View All</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Challan No</th><th>Party</th><th>Rolls</th><th>Date</th></tr></thead>
+        <tbody id="dash-challan-body"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">No challans yet</td></tr></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======= INWARD STOCK ======= -->
+<div class="page" id="page-inward">
+  <div class="section-title">Inward Stock</div>
+  <div class="section-sub">Record incoming Yarn Rolls and Warp Beams from suppliers</div>
+  
+  <div class="card">
+    <div class="card-header"><span class="card-title">Add New Inward Entry</span></div>
+    <div class="type-toggle">
+      <button class="type-btn yarn active" id="btn-yarn" data-type="yarn">🧶 Yarn Roll</button>
+      <button class="type-btn beam" id="btn-beam" data-type="beam">🪡 Warp Beam</button>
+    </div>
+    
+    <form id="inwardForm">
+      <!-- 🧶 Yarn Roll Details Section -->
+      <div id="yarnFields" class="form-section">
+        <div class="form-section-title">🧶 Yarn Roll Details</div>
+        <!-- 🔑 Changed to your exact CSS class: form-grid -->
+        <div class="form-grid" style="margin-bottom:10px">
+          <div class="form-group"><label>Roll Number *</label><input type="text" id="in-id" placeholder="e.g. YR-001"></div>
+          <div class="form-group"><label>Date Received</label><input type="date" id="in-date"></div>
+          <div class="form-group"><label>Vehicle / Truck No</label><input type="text" id="in-vehicle" placeholder="e.g. RJ-14-GA-1234"></div>
+          <div class="form-group"><label>Lot / Batch No</label><input type="text" id="in-lot" placeholder="Lot or batch number"></div>
+          <div class="form-group"><label>Rate (₹)</label><input type="number" id="in-rate" placeholder="Purchase rate" step="0.01"></div>
+          <div class="form-group"><label>Yarn Count (Ne) *</label><input type="text" id="yr-count" placeholder="e.g. 30s, 40s"></div>
+          <div class="form-group">
+            <label>Yarn Type *</label>
+            <select id="yr-type">
+              <option value="">Select...</option>
+              <option>Cotton</option>
+              <option>Non-Dyeing</option>
+              <option>Roto</option>
+              <option>Other</option>
+            </select>
+            <!-- Custom input safely nested inside the flex group cell -->
+            <input type="text" id="yr-type-custom" placeholder="Specify yarn type..." style="display: none; margin-top: 4px;">
+          </div>
+          <div class="form-group"><label>Ply</label><select id="yr-ply"><option value="1">Single (1 ply)</option><option value="2">Double (2 ply)</option><option value="3">Three ply</option></select></div>
+          <div class="form-group"><label>Color / Shade</label><input type="text" id="yr-color" placeholder="e.g. White, Dyed"></div>
+          <div class="form-group"><label>Weight/Roll (kg) *</label><input type="number" id="yr-weight" placeholder="e.g. 5.2" step="0.01"></div>
+          <div class="form-group"><label>No. of Rolls *</label><input type="number" id="yr-qty" value="1"></div>
+          <div class="form-group"><label>Remarks</label><input type="text" id="yr-remarks" placeholder="Optional notes"></div>
+        </div>
+      </div>
+
+      <!-- 🪡 Warp Beam Details Section -->
+      <div id="beamFields" class="form-section" style="display:none">
+        <div class="form-section-title">🪡 Warp Beam Details</div>
+        <!-- 🔑 Changed to your exact CSS class: form-grid -->
+        <div class="form-grid" style="margin-bottom:10px">
+          <!-- Row 1 -->
+          <div class="form-group"><label>Beam Number *</label><input type="text" id="wb-beamno" placeholder="e.g. B-001"></div>
+          <div class="form-group"><label>Date Received</label><input type="date" id="wb-date"></div>
+          <div class="form-group"><label>Yarn Count (Ne) *</label><input type="text" id="wb-count" placeholder="e.g. 30s"></div>
+          
+          <!-- Row 2 -->
+          <div class="form-group">
+            <label>Yarn Type *</label>
+            <select id="wb-yarntype">
+              <option value="">Select...</option>
+              <option>Cotton</option>
+              <option>Non-Dyeing</option>
+              <option>Roto</option>
+              <option>Other</option>
+            </select>
+            <!-- Custom input safely nested inside the flex group cell -->
+            <input type="text" id="wb-type-custom" placeholder="Specify custom type..." style="display: none; margin-top: 4px;">
+          </div>
+          <div class="form-group"><label>Total Ends *</label><input type="number" id="wb-ends" placeholder="No. of warp ends"></div>
+          <div class="form-group"><label>Reed Width (cm)</label><input type="number" id="wb-reed" placeholder="e.g. 180"></div>
+          <div class="form-group"><label>Beam Length (m) *</label><input type="number" id="wb-length" placeholder="e.g. 500"></div>
+
+          <!-- Row 3 -->
+          <div class="form-group"><label>Beam Weight (kg)</label><input type="number" id="wb-weight" placeholder="Total wt" step="0.1"></div>
+          <div class="form-group"><label>Net Yarn Wt (kg)</label><input type="number" id="wb-netyarn" placeholder="Yarn only" step="0.1"></div>
+          <div class="form-group"><label>EPI</label><input type="number" id="wb-epi" placeholder="Ends per inch"></div>
+          
+          <!-- Row 4 -->
+          <div class="form-group"><label>Loom / Machine No *</label><input type="text" id="wb-loom" placeholder="e.g. Loom-3, Machine-A"></div>
+          <div class="form-group"><label>Lot / Batch No</label><input type="text" id="wb-lot" placeholder="Lot or batch number"></div>
+          
+          <!-- Row 5 -->
+          <div class="form-group"><label>Remarks</label><input type="text" id="wb-remarks" placeholder="Optional notes"></div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="margin-top:15px;">➕ Add to Inward Stock</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">All Inward Stock</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="inward-filter-type" onchange="filterInward()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none"><option value="">All Types</option><option value="yarn">Yarn Roll</option><option value="beam">Warp Beam</option></select>
+        <input type="date" id="inward-filter-date" onchange="filterInward()" title="Filter by date" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none">
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);white-space:nowrap"><input type="checkbox" id="inward-show-all-dates" onchange="filterInward()"> All dates</label>
+        <input type="text" placeholder="Search..." id="inward-search" oninput="filterInward()" style="padding:7px 11px;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none;width:170px">
+      </div>
+    </div>
+    <!-- Inside index.html, look for All Inward Stock Table Wrap -->
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>ID</th>
+        <th>Count / Type</th>
+        <th>Details</th>
+        <th>Qty/Wt</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="inwardTableBody"></tbody>
+  </table>
+</div>
+  <div class="stock-pagination" id="inward-pagination"></div>
+  </div>
+</div>
+<!-- ======= GREY ROLL STOCK ======= -->
+<div class="page" id="page-grey">
+  <div class="section-title">Grey Roll Stock</div>
+  <div class="section-sub">Your finished product — grey fabric rolls produced from weaving/mussiness process</div>
+
+  <!-- BORDERED BANNER CARD -->
+  <div class="grey-info" style="background:#f5f1ea; border:1px solid var(--border); border-radius:8px; padding:14px 18px; margin-bottom:20px; font-size:13px; line-height:1.5;">
+    <strong>🩶 Grey Roll</strong> is your <strong>finished woven fabric</strong> — produced after the weaving process using Warp Beams and Yarn. Each roll gets a unique Roll Number, is quality graded, and then dispatched via Challan.
+  </div>
+
+  <!-- 📝 DETAILED FORM CARD -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">Add Grey Roll (Finished Product)</span></div>
+    
+    <div class="form-section" style="margin-bottom: 20px;">
+      <div class="form-section-title" style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 10px;">Roll Identity</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Grey Roll Number *</label><input type="text" id="gr-no" placeholder="e.g. GR-2024-001"></div>
+        <div class="form-group"><label>Production Date *</label><input type="date" id="gr-date"></div>
+        <div class="form-group"><label>Beam Used (Warp Beam No)</label><input type="text" id="gr-beam" placeholder="e.g. B-001"></div>
+        <div class="form-group"><label>Loom / Machine No</label><input type="text" id="gr-loom" placeholder="Auto-filled from beam, or enter manually"></div>
+      </div>
+    </div>
+
+    <div class="form-section" style="margin-bottom: 20px;">
+      <div class="form-section-title" style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 10px;">Fabric Specifications</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Fabric Construction</label><input type="text" id="gr-construction" placeholder="e.g. 40x40 / 110x90"></div>
+        <div class="form-group"><label>Width (inches) *</label><input type="number" id="gr-width" placeholder="e.g. 63, 72, 90"></div>
+        <div class="form-group"><label>Length / Meters *</label><input type="number" id="gr-meters" placeholder="e.g. 120" step="0.1"></div>
+        <div class="form-group"><label>Weight (kg)</label><input type="number" id="gr-weight" placeholder="Roll weight" step="0.01"></div>
+      </div>
+    </div>
+
+    <div class="form-section" style="margin-bottom: 20px;">
+      <div class="form-section-title" style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 10px;">Quality at Production</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Quality Grade</label>
+          <select id="gr-quality">
+            <option value="Sell" selected>Sell</option>
+            <option value="Defective">Defective</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:15px">
+      <label>Remarks / Notes</label>
+      <textarea id="gr-remarks" placeholder="Any additional production remarks..." style="padding:10px 12px; border:1px solid var(--border); border-radius:6px; font-size:13px; background:#fafafa; font-family:var(--sans); width:100%; min-height:60px; outline:none;"></textarea>
+    </div>
+
+    <button class="btn btn-grey" onclick="addGreyRoll()">🩶 Add Grey Roll to Stock</button>
+  </div>
+
+  <!-- 📊 GREY ROLL TABLE CARD -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">All Grey Rolls in Stock</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="grey-filter-grade" onchange="filterGrey()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none">
+          <option value="">All Grades</option>
+          <option value="Sell">Sell</option>
+          <option value="Defective">Defective</option>
+        </select>
+        <select id="grey-filter-status" onchange="filterGrey()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none">
+          <option value="">All Status</option>
+          <option value="In Stock">In Stock</option>
+          <option value="Ready">Ready to Sell</option>
+          <option value="Sold">Sold</option>
+        </select>
+        <input type="date" id="grey-filter-date" onchange="filterGrey()" title="Filter by date" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none">
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);white-space:nowrap"><input type="checkbox" id="grey-show-all-dates" onchange="filterGrey()"> All dates</label>
+        <input type="text" placeholder="Search roll no..." id="grey-search" oninput="filterGrey()" style="padding:7px 11px;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none;width:160px">
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Grey Roll No</th><th>Date</th><th>Beam Used</th><th>Loom</th>
+            <th>Construction</th><th>Width</th><th>Meters</th>
+            <th>Weight</th><th>Quality</th><th>Status</th><th>Del</th>
+          </tr>
+        </thead>
+        <tbody id="grey-body">
+          <tr><td colspan="11" style="text-align:center;color:var(--muted);padding:22px">No grey rolls added yet. Add your finished product rolls above.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="stock-pagination" id="grey-pagination"></div>
+  </div>
+
+  <!-- 📈 SUMMARY METRICS GRID -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:4px">
+    <div class="card" style="text-align:center;padding:16px;margin-bottom:0">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-weight:600;margin-bottom:6px">Total Rolls</div>
+      <div style="font-size:28px;font-weight:700;font-family:var(--mono)" id="gs-total">0</div>
+    </div>
+    <div class="card" style="text-align:center;padding:16px;margin-bottom:0">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-weight:600;margin-bottom:6px">Total Meters</div>
+      <div style="font-size:28px;font-weight:700;font-family:var(--mono)" id="gs-meters">0</div>
+    </div>
+    <div class="card" style="text-align:center;padding:16px;margin-bottom:0">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-weight:600;margin-bottom:6px">Ready to Sell</div>
+      <div style="font-size:28px;font-weight:700;font-family:var(--mono);color:var(--warp)" id="gs-ready">0</div>
+    </div>
+    <div class="card" style="text-align:center;padding:16px;margin-bottom:0">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);font-weight:600;margin-bottom:6px">Sold Rolls</div>
+      <div style="font-size:28px;font-weight:700;font-family:var(--mono);color:var(--muted)" id="gs-sold">0</div>
+    </div>
+  </div>
+</div>
+
+<!-- ======= READY TO SELL PAGE ======= -->
+<div class="page" id="page-ready">
+  <div class="section-title" style="font-size:22px; font-weight:700; margin-bottom:4px;">Ready to Sell Inventory</div>
+  <div class="section-sub" style="color:var(--muted, #666); font-size:13px; margin-bottom:20px;">
+    Quality cleared Grey Rolls, Yarn, and Beams ready for dispatch
+  </div>
+
+  <!-- KPI Stat Cards -->
+  <div class="kpi-row" style="display: flex; gap: 16px; margin-bottom: 20px;">
+    <div class="kpi-card" style="background:#fff; padding:16px; border-radius:8px; border:1px solid #e2e8f0; flex:1;">
+      <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">SELLABLE ITEMS</div>
+      <div id="rts-total-count" style="font-size:24px; font-weight:700; color:#0f172a;">0</div>
+    </div>
+    <div class="kpi-card" style="background:#fff; padding:16px; border-radius:8px; border:1px solid #e2e8f0; flex:1;">
+      <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">TOTAL METERS AVAILABLE</div>
+      <div id="rts-total-meters" style="font-size:24px; font-weight:700; color:#0f172a;">0 m</div>
+    </div>
+    <div class="kpi-card" style="background:#fff; padding:16px; border-radius:8px; border:1px solid #e2e8f0; flex:1;">
+      <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">AVG RATE (₹/M)</div>
+      <div id="rts-avg-rate" style="font-size:24px; font-weight:700; color:#0f172a;">₹0.00</div>
+    </div>
+    <div class="kpi-card" style="background:#fff; padding:16px; border-radius:8px; border:1px solid #e2e8f0; flex:1;">
+      <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">TOTAL READY VALUE</div>
+      <div id="rts-total-value" style="font-size:24px; font-weight:700; color:#10b981;">₹0.00</div>
+    </div>
+  </div>
+
+  <!-- Filters Bar -->
+  <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:16px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:20px;">
+    <div style="font-weight:700; color:#334155;">Available Items for Sale</div>
+    <div style="display:flex; gap:12px;">
+      <select id="ready-filter" style="padding:6px 12px; border:1px solid #cbd5e1; border-radius:6px;">
+        <option value="">All Item Types</option>
+        <option value="grey">Grey Roll</option>
+        <option value="yarn">Yarn</option>
+        <option value="beam">Beam</option>
+      </select>
+      <select id="ready-grade-filter" style="padding:6px 12px; border:1px solid #cbd5e1; border-radius:6px;">
+        <option value="">All Grades</option>
+        <option value="Sell">Sell</option>
+        <option value="Defective">Defective</option>
+      </select>
+      <input type="text" id="ready-search" placeholder="Search item, weave, code..." style="padding:6px 12px; border:1px solid #cbd5e1; border-radius:6px; width:220px;">
+    </div>
+  </div>
+
+  <!-- Dynamic Item Grid -->
+  <div id="ready-grid" style="display:flex; flex-wrap:wrap; gap:16px; min-height:150px;">
+    <div style="color:#64748b; padding:30px; text-align:center; width:100%;">Loading sellable inventory...</div>
+  </div>
+</div>
+
+<!-- ======= CHALLAN / DELIVERY NOTE SECTION ======= -->
+<div class="page" id="page-challan">
+  <div class="section-title" style="font-size: 22px; font-weight: 700; margin-bottom: 4px; color: #0f172a;">
+    Challan / Delivery Note
+  </div>
+  <div class="section-sub" style="color: #64748b; font-size: 13px; margin-bottom: 20px;">
+    Generate dispatch challan with Grey Roll numbers for customer delivery
+  </div>
+
+  <!-- 1. CREATE NEW CHALLAN CARD -->
+  <div class="card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px; font-family: system-ui, -apple-system, sans-serif;">
+    <div style="font-size: 16px; font-weight: 700; color: #0f172a; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 16px;">
+      Create New Challan
+    </div>
+
+    <!-- Inputs Row 1 -->
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px;">
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">CUSTOMER / PARTY NAME *</label>
+        <input type="text" id="ch-party" placeholder="Customer name" style="padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fafafa; outline: none;">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">CUSTOMER ADDRESS</label>
+        <input type="text" id="ch-address" placeholder="Full address" style="padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fafafa; outline: none;">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">GST NO / MOBILE</label>
+        <input type="text" id="ch-gst" placeholder="GST or mobile" style="padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fafafa; outline: none;">
+      </div>
+    </div>
+
+    <!-- Inputs Row 2 -->
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px;">
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">TRANSPORT / VEHICLE NO</label>
+        <input type="text" id="ch-transport" placeholder="Truck/vehicle no" style="padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fafafa; outline: none;">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">DELIVERY DATE</label>
+        <input type="date" id="ch-date" value="2026-08-12" style="padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fafafa; outline: none; font-family: inherit;">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">REMARKS</label>
+        <input type="text" id="ch-remarks" placeholder="Optional" style="padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fafafa; outline: none;">
+      </div>
+    </div>
+
+    <!-- Item Selection Section -->
+    <div style="margin-bottom: 20px;">
+      <div style="font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 10px;">
+        Select Grey Rolls / Items for Challan <span style="font-size: 12px; font-weight: 400; color: #64748b;">(only ready/standard quality items shown)</span>
+      </div>
+
+      <div id="ch-items-list" style="border: 1px solid #f1f5f9; border-radius: 8px; padding: 16px; min-height: 48px; background: #ffffff;">
+        <span style="color: #64748b; font-size: 14px;">No ready items available.</span>
+      </div>
+    </div>
+
+    <!-- Action Bar -->
+    <div style="display: flex; align-items: center; gap: 16px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+      <button id="btn-generate-challan" style="background: #2563eb; color: #ffffff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+        📄 Generate Challan
+      </button>
+      <span style="font-size: 13px; color: #64748b;">
+        Selected: <strong id="ch-selected-count" style="color: #0f172a;">0</strong> items (<span id="ch-selected-meters">0.0</span> m)
+      </span>
+    </div>
+  </div>
+
+  <!-- 2. ISSUED CHALLANS TABLE CARD -->
+  <div class="card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; font-family: system-ui, -apple-system, sans-serif;">
+    <div style="font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 16px;">
+      Issued Challans
+    </div>
+
+    <div class="table-wrap" style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <thead>
+          <tr style="background: #f8f6f0; border-bottom: 1px solid #e2e8f0; text-align: left; color: #64748b; font-size: 11px; text-transform: uppercase;">
+            <th style="padding: 12px; font-weight: 700;">CHALLAN NO</th>
+            <th style="padding: 12px; font-weight: 700;">PARTY</th>
+            <th style="padding: 12px; font-weight: 700;">ADDRESS</th>
+            <th style="padding: 12px; font-weight: 700;">ITEMS</th>
+            <th style="padding: 12px; font-weight: 700;">TOTAL METERS</th>
+            <th style="padding: 12px; font-weight: 700;">DATE</th>
+            <th style="padding: 12px; font-weight: 700;">PRINT</th>
+          </tr>
+        </thead>
+        <tbody id="issued-challans-body">
+          <tr>
+            <td colspan="7" style="text-align: center; color: #94a3b8; padding: 22px;">No issued challans found</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+        <!-- ======= SPARE PARTS SECTION ======= -->
+<div class="page" id="page-spares">
+  <div class="section-title" style="font-size:22px; font-weight:700; margin-bottom:4px;">Spare Parts</div>
+  <div class="section-sub" style="color:var(--muted, #666); font-size:13px; margin-bottom:20px;">
+    Manage machine spares, consumables, and track which machine they're issued to
+  </div>
+
+  <!-- 1. ADD SPARE PART CARD -->
+  <div class="card" style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:20px; margin-bottom:20px;">
+    <div style="font-size:16px; font-weight:700; border-bottom:1px solid #f1f5f9; padding-bottom:10px; margin-bottom:16px;">Add Spare Part</div>
+    
+    <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; margin-bottom:14px;">
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">PART NAME *</label>
+        <input type="text" id="sp-name" placeholder="e.g. Shuttle, Needle, Belt" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+      </div>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">PART CODE / SKU</label>
+        <input type="text" id="sp-code" placeholder="e.g. SP-001" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+      </div>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">MACHINE TYPE</label>
+        <select id="sp-machine" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+          <option value="">Select machine type...</option>
+          <option>Mussiness Machine</option>
+          <option>Warping Machine</option>
+          <option>Sizing Machine</option>
+          <option>Loom</option>
+          <option>Winding Machine</option>
+          <option>Twisting Machine</option>
+          <option>Compressor</option>
+          <option>Generator</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">QUANTITY *</label>
+        <input type="number" id="sp-qty" placeholder="e.g. 10" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+      </div>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">UNIT</label>
+        <select id="sp-unit" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+          <option>Pcs</option>
+          <option>Set</option>
+          <option>Meter</option>
+          <option>Kg</option>
+          <option>Liter</option>
+          <option>Box</option>
+          <option>Pair</option>
+        </select>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">SUPPLIER</label>
+        <input type="text" id="sp-supplier" placeholder="Supplier name" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+      </div>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">UNIT COST (₹)</label>
+        <input type="number" id="sp-cost" placeholder="e.g. 250" step="0.01" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+      </div>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">MIN STOCK (ALERT)</label>
+        <input type="number" id="sp-min" placeholder="Alert below this" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+      </div>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">DATE ADDED</label>
+        <input type="date" id="sp-date" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+      </div>
+      <div style="grid-column: span 2; display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">REMARKS</label>
+        <input type="text" id="sp-remarks" placeholder="Optional" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+      </div>
+    </div>
+    <button class="btn btn-purple" id="btn-add-spare" style="background:#7c3aed; color:#fff; border:none; padding:8px 16px; border-radius:6px; font-weight:600; font-size:13px; cursor:pointer;">
+      🔧 Add Spare Part
+    </button>
+  </div>
+
+  <!-- 2. ISSUE SPARE PART TO MACHINE CARD -->
+  <div class="card" style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:20px; margin-bottom:20px;">
+    <div style="font-size:16px; font-weight:700; border-bottom:1px solid #f1f5f9; padding-bottom:10px; margin-bottom:12px;">
+      🏭 Issue Spare Part to Machine
+    </div>
+    <div style="background:#fffbe0; border:1px solid #fef08a; padding:10px 14px; border-radius:6px; font-size:12px; color:#854d0e; margin-bottom:14px;">
+      Record every time a spare part is taken out of stock and given to a specific machine — this keeps an exact trail of how much has gone to which machine number.
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-bottom:14px;">
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">SELECT SPARE PART *</label>
+        <select id="is-part" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+          <option value="">-- Select Part --</option>
+        </select>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">MACHINE NO / ID *</label>
+        <input type="text" id="is-machineno" placeholder="e.g. Loom-3, Mussiness-1" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+      </div>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">QUANTITY TO ISSUE *</label>
+        <input type="number" id="is-qty" placeholder="e.g. 2" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+      </div>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">AVAILABLE STOCK</label>
+        <input type="text" id="is-available" readonly placeholder="—" style="padding:8px 10px; border:1px solid #e2e8f0; background:#f8fafc; font-weight:700; border-radius:6px; font-size:13px;">
+      </div>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">DATE ISSUED</label>
+        <input type="date" id="is-date" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+      </div>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">ISSUED TO (PERSON)</label>
+        <input type="text" id="is-person" placeholder="Operator / fitter name" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+      </div>
+      <div style="grid-column: span 3; display:flex; flex-direction:column; gap:4px;">
+        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">REASON / REMARKS</label>
+        <input type="text" id="is-remarks" placeholder="e.g. Routine replacement, breakdown" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+      </div>
+    </div>
+    <button class="btn btn-grey" id="btn-issue-spare" style="background:#334155; color:#fff; border:none; padding:8px 16px; border-radius:6px; font-weight:600; font-size:13px; cursor:pointer;">
+      🏭 Issue to Machine
+    </button>
+  </div>
+
+  <!-- 3. INVENTORY TABLE -->
+  <div class="card" style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:20px; margin-bottom:20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <div style="font-size:16px; font-weight:700;">Spare Parts Inventory</div>
+      <input type="text" id="spare-search" placeholder="Search parts..." style="padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; width:200px;">
+    </div>
+    <div class="table-wrap" style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <thead>
+          <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0; text-align:left; color:#64748b; font-size:11px; text-transform:uppercase;">
+            <th style="padding:10px;">Part Name</th>
+            <th style="padding:10px;">Code</th>
+            <th style="padding:10px;">Machine Type</th>
+            <th style="padding:10px;">In Stock</th>
+            <th style="padding:10px;">Total Issued</th>
+            <th style="padding:10px;">Unit</th>
+            <th style="padding:10px;">Supplier</th>
+            <th style="padding:10px;">Cost</th>
+            <th style="padding:10px;">Total Value</th>
+            <th style="padding:10px;">Status</th>
+            <th style="padding:10px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="spare-body">
+          <tr><td colspan="11" style="text-align:center; color:#94a3b8; padding:22px;">No spare parts added yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 4. ISSUANCE HISTORY TABLE -->
+  <div class="card" style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:20px; margin-bottom:20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <div style="font-size:16px; font-weight:700;">Issuance History — By Machine</div>
+      <input type="text" id="issue-search" placeholder="Search machine no / part..." style="padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; width:220px;">
+    </div>
+    <div class="table-wrap" style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <thead>
+          <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0; text-align:left; color:#64748b; font-size:11px; text-transform:uppercase;">
+            <th style="padding:10px;">Date</th>
+            <th style="padding:10px;">Part Name</th>
+            <th style="padding:10px;">Machine No</th>
+            <th style="padding:10px;">Qty Issued</th>
+            <th style="padding:10px;">Unit</th>
+            <th style="padding:10px;">Issued To</th>
+            <th style="padding:10px;">Remarks</th>
+            <th style="padding:10px;">Del</th>
+          </tr>
+        </thead>
+        <tbody id="issue-body">
+          <tr><td colspan="8" style="text-align:center; color:#94a3b8; padding:22px;">No spare parts issued yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 5. MACHINE WISE SUMMARY -->
+  <div class="card" style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:20px;">
+    <div style="font-size:16px; font-weight:700; margin-bottom:14px;">📊 Total Spares Issued — Machine Wise Summary</div>
+    <div class="table-wrap" style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <thead>
+          <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0; text-align:left; color:#64748b; font-size:11px; text-transform:uppercase;">
+            <th style="padding:10px;">Machine No</th>
+            <th style="padding:10px;">Total Issues</th>
+            <th style="padding:10px;">Parts Breakdown</th>
+            <th style="padding:10px;">Total Qty Issued</th>
+          </tr>
+        </thead>
+        <tbody id="machine-summary-body">
+          <tr><td colspan="4" style="text-align:center; color:#94a3b8; padding:22px;">No issuance data yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+        </main>
+    </div>
+
+    <!-- PRINT PORTAL DIALOG INTERFACE MODAL -->
+    <div class="modal-overlay" id="challanModal">
+        <div class="modal">
+            <div class="modal-header no-print">
+                <h3>Transactional Commercial Document Viewer</h3>
+                <div>
+                    <button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ Commit Device Hardcopy Print</button>
+                    <button class="btn btn-outline btn-sm" id="closeModalBtn">Exit Canvas View</button>
+                </div>
+            </div>
+            <div id="challanPrintArea"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
