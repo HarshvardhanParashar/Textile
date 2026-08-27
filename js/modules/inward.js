@@ -4,10 +4,7 @@ import { isSuperAdmin } from '../auth.js';
 let activeType = 'yarn';
 let editingId = null;
 let cachedRecords = [];
-<<<<<<< HEAD
 let inwardDatePage = 0;
-=======
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
 
 export function setupInwardHandlers() {
     const form = document.getElementById('inwardForm');
@@ -186,7 +183,6 @@ export async function renderInwardTable() {
 
     try {
         cachedRecords = await sendRequest('inward') || [];
-<<<<<<< HEAD
         renderInwardTableUI(cachedRecords);
     } catch (e) {
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">Database Sync Failure</td></tr>';
@@ -218,11 +214,6 @@ function renderInwardTableUI(records) {
     });
 
     tbody.innerHTML = filtered.map(r => {
-=======
-        const canManage = isSuperAdmin();
-
-        tbody.innerHTML = cachedRecords.map(r => {
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
             const specifications = r.type === 'yarn' ? `Weight: ${r.yrWeight || 0} kg` : `Ends: ${r.wbEnds || 0} | Loom: ${r.wbLoom || '—'}`;
             const metrics = r.type === 'yarn' ? `${r.yrQty || 1} Rolls` : `${r.wbLength || 0} Meters`;
             const actions = canManage ? `
@@ -243,7 +234,6 @@ function renderInwardTableUI(records) {
                     <td>${actions}</td>
                 </tr>
             `;
-<<<<<<< HEAD
     }).join('') || '<tr><td colspan="7" style="text-align:center; color:var(--muted);">No records registered for this date.</td></tr>';
 
     const dateLabel = activeDate ? new Date(`${activeDate}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'No dates';
@@ -267,13 +257,6 @@ function renderInwardTableUI(records) {
     if (!canManage) return;
 
     tbody.querySelectorAll('.action-edit-inward').forEach(b => {
-=======
-        }).join('') || '<tr><td colspan="7" style="text-align:center; color:var(--muted);">No records registered.</td></tr>';
-
-        if (!canManage) return;
-
-        tbody.querySelectorAll('.action-edit-inward').forEach(b => {
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
             b.addEventListener('click', (e) => {
                 const targetId = e.currentTarget.dataset.id;
                 const match = cachedRecords.find(item => item.id === targetId);
@@ -281,11 +264,7 @@ function renderInwardTableUI(records) {
             });
         });
 
-<<<<<<< HEAD
     tbody.querySelectorAll('.action-purge-inward').forEach(b => {
-=======
-        tbody.querySelectorAll('.action-purge-inward').forEach(b => {
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
             b.addEventListener('click', async (e) => {
                 const targetId = e.currentTarget.dataset.id;
                 if (confirm(`Remove item ${targetId} permanently?`)) {
@@ -293,7 +272,6 @@ function renderInwardTableUI(records) {
                     await renderInwardTable();
                 }
             });
-<<<<<<< HEAD
     });
 }
 
@@ -301,11 +279,3 @@ window.filterInward = () => {
     inwardDatePage = 0;
     renderInwardTableUI(cachedRecords);
 };
-=======
-        });
-
-    } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">Database Sync Failure</td></tr>';
-    }
-}
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c

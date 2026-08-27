@@ -69,20 +69,14 @@ async function loadReadyItems() {
 
 function renderReadyItemsSelector() {
   const container = document.getElementById('ch-items-list');
-<<<<<<< HEAD
   const pendingItemId = window.pendingChallanItemId;
   selectedRollIds.clear();
-=======
-  selectedRollIds.clear();
-  updateSelectedSummary();
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
 
   if (!readyRollsList.length) {
     container.innerHTML = `<div class="challan-empty-state">No ready items available.</div>`;
     return;
   }
 
-<<<<<<< HEAD
   const groupedItems = new Map();
   readyRollsList.forEach(roll => {
     const groupLabel = getGroupLabel(roll);
@@ -131,33 +125,6 @@ function getGroupLabel(item) {
   const width = String(item.width || '').trim();
   if (!width || fabricType.includes('=')) return fabricType;
   return `${fabricType}=${width}"`;
-=======
-  container.innerHTML = `
-    <div class="challan-items-grid">
-      ${readyRollsList.map((roll, idx) => {
-        const id = roll.id || roll._id;
-        const isSelected = selectedRollIds.has(id);
-        return `
-          <label class="challan-item-card ${isSelected ? 'selected' : ''}">
-            <input type="checkbox" value="${id}" onchange="toggleRollSelection('${id}')" ${isSelected ? 'checked' : ''}>
-            <div class="challan-item-header">
-              <div class="challan-item-badge">${roll.quality || 'Standard'}</div>
-              <span class="challan-item-number">${roll.rollNo || `Roll #${idx + 1}`}</span>
-            </div>
-            <div class="challan-item-meta">
-              <span>${Number(roll.meters || 0).toFixed(1)} m</span>
-              <span>${roll.quality || 'Standard'}</span>
-            </div>
-            <div class="challan-item-footer">
-              <span>Ready stock</span>
-              <strong>₹${Number(roll.rate || 0).toFixed(2)}/m</strong>
-            </div>
-          </label>
-        `;
-      }).join('')}
-    </div>
-  `;
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
 }
 
 window.toggleRollSelection = (rollId) => {

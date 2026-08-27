@@ -28,19 +28,10 @@ export async function renderReadyToSellPage() {
         _id: roll._id,
         itemCode: roll.no ? `Roll #${roll.no}` : 'Grey Roll',
         itemType: 'grey',
-<<<<<<< HEAD
         fabricType: `${roll.construction || 'Finished Fabric'}`,
         quantityMeters: roll.meters || 0,
         pricePerMeter: 0,
         qualityGrade: roll.quality || 'Sell',
-=======
-        fabricType: `${roll.weave || 'Standard'} ${roll.construction ? '(' + roll.construction + ')' : ''}`,
-        quantityMeters: roll.meters || 0,
-        pricePerMeter: roll.rate || 0,
-        qualityGrade: roll.grade || 'Standard',
-        epi: roll.epiPpi ? roll.epiPpi.split('/')[0] : (roll.epi || 0),
-        ppi: roll.epiPpi ? roll.epiPpi.split('/')[1] : (roll.ppi || 0),
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
         width: roll.width || ''
       }));
 
@@ -67,11 +58,7 @@ function renderReadyGridUI(items = []) {
   const filtered = items.filter(item => {
     const itemType = (item.itemType || item.type || 'grey').toLowerCase();
     const matchType = !typeVal || itemType === typeVal.toLowerCase();
-<<<<<<< HEAD
-    const itemGrade = item.qualityGrade || item.quality || item.grade || 'Sell';
-=======
-    const itemGrade = item.qualityGrade || item.quality || item.grade || 'Standard';
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
+  const itemGrade = item.qualityGrade || item.quality || item.grade || 'Sell';
     const matchGrade = !gradeVal || itemGrade.toLowerCase() === gradeVal.toLowerCase();
     
     const searchTarget = `${item.itemCode || item.no || ''} ${item.fabricType || item.weave || ''} ${item.construction || ''}`.toLowerCase();
@@ -101,7 +88,6 @@ function renderReadyGridUI(items = []) {
     return;
   }
 
-<<<<<<< HEAD
   const groupedItems = new Map();
   filtered.forEach(item => {
     const groupLabel = getGroupLabel(item);
@@ -116,22 +102,11 @@ function renderReadyGridUI(items = []) {
     const rate = parseFloat(item.pricePerMeter || item.rate) || 0;
     const totalItemValue = meters * rate;
     const quality = item.qualityGrade || item.quality || item.grade || 'Sell';
-=======
-  grid.innerHTML = filtered.map(item => {
-    const meters = parseFloat(item.quantityMeters || item.meters) || 0;
-    const rate = parseFloat(item.pricePerMeter || item.rate) || 0;
-    const totalItemValue = meters * rate;
-    const quality = item.qualityGrade || item.quality || item.grade || 'Standard';
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
     const code = item.itemCode || (item.no ? `Roll #${item.no}` : 'RTS Item');
     const typeLabel = item.itemType === 'yarn' ? '🧶 Yarn' : item.itemType === 'beam' ? '🪡 Beam' : '🩶 Grey Roll';
 
     return `
-<<<<<<< HEAD
-      <div class="ready-card" data-ready-item-id="${item._id || item.id || ''}" style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:16px; width:250px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor:pointer;">
-=======
-      <div class="ready-card" style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:16px; width:250px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
+  <div class="ready-card" data-ready-item-id="${item._id || item.id || ''}" style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:16px; width:250px; box-shadow:0 1px 3px rgba(0,0,0,0.05); cursor:pointer;">
         <div style="display:inline-flex; align-items:center; gap:4px; background:#f1f5f9; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:600; color:#475569; margin-bottom:10px;">
           ${typeLabel}
         </div>
@@ -150,7 +125,6 @@ function renderReadyGridUI(items = []) {
         </div>
       </div>
     `;
-<<<<<<< HEAD
     }).join('');
 
     return `
@@ -177,7 +151,4 @@ function getGroupLabel(item) {
   const width = String(item.width || '').trim();
   if (!width || fabricType.includes('=')) return fabricType;
   return `${fabricType}=${width}"`;
-=======
-  }).join('');
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
 }

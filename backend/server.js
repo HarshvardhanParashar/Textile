@@ -23,8 +23,9 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const app = express();
+// Use localhost for local development; Render can override HOST with 0.0.0.0.
 const HOST = process.env.HOST || 'localhost';
-const PORT = Number(process.env.PORT) || 5000;
+const PORT = process.env.PORT || 5000;
 const connString = process.env.MONGO_URI || process.env.MONGODB_URI;
 
 app.use(cors());
@@ -89,9 +90,10 @@ mongoose.connect(connString)
         console.log('✅ Super admin seeded: yashg / pass123');
     }
 
-    app.listen(PORT, HOST, () => {
-        console.log(`🚀 Server running on http://${HOST}:${PORT}`);
-    });
+
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+});
 })
 .catch((err) => {
     console.error('❌ Database error:', err.message);

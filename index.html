@@ -265,11 +265,8 @@
       <span class="card-title">All Inward Stock</span>
       <div style="display:flex;gap:8px;align-items:center">
         <select id="inward-filter-type" onchange="filterInward()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none"><option value="">All Types</option><option value="yarn">Yarn Roll</option><option value="beam">Warp Beam</option></select>
-<<<<<<< HEAD
         <input type="date" id="inward-filter-date" onchange="filterInward()" title="Filter by date" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none">
         <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);white-space:nowrap"><input type="checkbox" id="inward-show-all-dates" onchange="filterInward()"> All dates</label>
-=======
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
         <input type="text" placeholder="Search..." id="inward-search" oninput="filterInward()" style="padding:7px 11px;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none;width:170px">
       </div>
     </div>
@@ -290,10 +287,7 @@
     <tbody id="inwardTableBody"></tbody>
   </table>
 </div>
-<<<<<<< HEAD
   <div class="stock-pagination" id="inward-pagination"></div>
-=======
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
   </div>
 </div>
 <!-- ======= GREY ROLL STOCK ======= -->
@@ -317,10 +311,6 @@
         <div class="form-group"><label>Production Date *</label><input type="date" id="gr-date"></div>
         <div class="form-group"><label>Beam Used (Warp Beam No)</label><input type="text" id="gr-beam" placeholder="e.g. B-001"></div>
         <div class="form-group"><label>Loom / Machine No</label><input type="text" id="gr-loom" placeholder="Auto-filled from beam, or enter manually"></div>
-<<<<<<< HEAD
-=======
-        <div class="form-group"><label>Weaver / Operator</label><input type="text" id="gr-weaver" placeholder="Operator name"></div>
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
       </div>
     </div>
 
@@ -328,39 +318,9 @@
       <div class="form-section-title" style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 10px;">Fabric Specifications</div>
       <div class="form-grid">
         <div class="form-group"><label>Fabric Construction</label><input type="text" id="gr-construction" placeholder="e.g. 40x40 / 110x90"></div>
-<<<<<<< HEAD
         <div class="form-group"><label>Width (inches) *</label><input type="number" id="gr-width" placeholder="e.g. 63, 72, 90"></div>
         <div class="form-group"><label>Length / Meters *</label><input type="number" id="gr-meters" placeholder="e.g. 120" step="0.1"></div>
         <div class="form-group"><label>Weight (kg)</label><input type="number" id="gr-weight" placeholder="Roll weight" step="0.01"></div>
-=======
-        <div class="form-group">
-          <label>Weave Type</label>
-          <select id="gr-weave">
-            <option value="">Select...</option>
-            <option>Plain</option>
-            <option>Twill</option>
-            <option>Satin</option>
-            <option>Dobby</option>
-            <option>Jacquard</option>
-            <option>Canvas</option>
-            <option>Poplin</option>
-            <option>Voile</option>
-            <option>Cambric</option>
-            <option>Other</option>
-          </select>
-          <input type="text" id="gr-weave-custom" placeholder="Specify custom weave..." style="display: none; margin-top: 4px;">
-        </div>
-        <div class="form-group"><label>Width (inches) *</label><input type="number" id="gr-width" placeholder="e.g. 63, 72, 90"></div>
-        <div class="form-group"><label>Length / Meters *</label><input type="number" id="gr-meters" placeholder="e.g. 120" step="0.1"></div>
-        <div class="form-group"><label>Weight (kg)</label><input type="number" id="gr-weight" placeholder="Roll weight" step="0.01"></div>
-        <div class="form-group"><label>EPI (Ends/inch)</label><input type="number" id="gr-epi" placeholder="e.g. 60"></div>
-        <div class="form-group"><label>PPI (Picks/inch)</label><input type="number" id="gr-ppi" placeholder="e.g. 58"></div>
-        <div class="form-group"><label>Warp Count</label><input type="text" id="gr-warp-count" placeholder="e.g. 40s"></div>
-        <div class="form-group"><label>Weft Count</label><input type="text" id="gr-weft-count" placeholder="e.g. 40s"></div>
-        <div class="form-group"><label>Warp Yarn Type</label><input type="text" id="gr-warp-yarn" placeholder="e.g. Cotton"></div>
-        <div class="form-group"><label>Weft Yarn Type</label><input type="text" id="gr-weft-yarn" placeholder="e.g. Cotton, Non-Dyeing, Roto"></div>
-        <div class="form-group"><label>Grey Fabric Rate (₹/m)</label><input type="number" id="gr-rate" placeholder="Sale rate per meter" step="0.01"></div>
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
       </div>
     </div>
 
@@ -370,40 +330,10 @@
         <div class="form-group">
           <label>Quality Grade</label>
           <select id="gr-quality">
-<<<<<<< HEAD
             <option value="Sell" selected>Sell</option>
             <option value="Defective">Defective</option>
           </select>
         </div>
-=======
-            <option value="">Pending Inspection</option>
-            <option value="Standard">Standard (Sell)</option>
-            <option value="Second">Second Quality</option>
-            <option value="Defective">Defective</option>
-            <option value="Other">Other</option>
-          </select>
-          <input type="text" id="gr-quality-custom" placeholder="Specify custom quality..." style="display: none; margin-top: 4px;">
-        </div>
-        <div class="form-group">
-          <label>Defect (if any)</label>
-          <select id="gr-defect">
-            <option value="">None</option>
-            <option>Broken Pick</option>
-            <option>Missing End</option>
-            <option>Reed Mark</option>
-            <option>Oil Stain</option>
-            <option>Float</option>
-            <option>Hole</option>
-            <option>Thick/Thin</option>
-            <option>Loose Selvedge</option>
-            <option>Wrong Draw-in</option>
-            <option>Other</option>
-          </select>
-          <input type="text" id="gr-defect-custom" placeholder="Specify custom defect..." style="display: none; margin-top: 4px;">
-        </div>
-        <div class="form-group"><label>Shrinkage %</label><input type="number" id="gr-shrink" placeholder="Warp shrinkage %" step="0.1"></div>
-        <div class="form-group"><label>Crimp %</label><input type="number" id="gr-crimp" placeholder="Yarn crimp %" step="0.1"></div>
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
       </div>
     </div>
 
@@ -422,15 +352,8 @@
       <div style="display:flex;gap:8px;align-items:center">
         <select id="grey-filter-grade" onchange="filterGrey()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none">
           <option value="">All Grades</option>
-<<<<<<< HEAD
           <option value="Sell">Sell</option>
           <option value="Defective">Defective</option>
-=======
-          <option value="Standard">Standard</option>
-          <option value="Second">Second Quality</option>
-          <option value="Defective">Defective</option>
-          <option value="">Pending</option>
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
         </select>
         <select id="grey-filter-status" onchange="filterGrey()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none">
           <option value="">All Status</option>
@@ -438,13 +361,9 @@
           <option value="Ready">Ready to Sell</option>
           <option value="Sold">Sold</option>
         </select>
-<<<<<<< HEAD
         <input type="date" id="grey-filter-date" onchange="filterGrey()" title="Filter by date" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none">
         <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);white-space:nowrap"><input type="checkbox" id="grey-show-all-dates" onchange="filterGrey()"> All dates</label>
         <input type="text" placeholder="Search roll no..." id="grey-search" oninput="filterGrey()" style="padding:7px 11px;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none;width:160px">
-=======
-        <input type="text" placeholder="Search roll no / weave..." id="grey-search" oninput="filterGrey()" style="padding:7px 11px;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none;width:160px">
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
       </div>
     </div>
     <div class="table-wrap">
@@ -452,7 +371,6 @@
         <thead>
           <tr>
             <th>Grey Roll No</th><th>Date</th><th>Beam Used</th><th>Loom</th>
-<<<<<<< HEAD
             <th>Construction</th><th>Width</th><th>Meters</th>
             <th>Weight</th><th>Quality</th><th>Status</th><th>Del</th>
           </tr>
@@ -463,18 +381,6 @@
       </table>
     </div>
     <div class="stock-pagination" id="grey-pagination"></div>
-=======
-            <th>Weave</th><th>Construction</th><th>Width</th><th>Meters</th>
-            <th>Weight</th><th>EPI/PPI</th><th>Grade</th><th>Defect</th>
-            <th>Rate</th><th>Status</th><th>Del</th>
-          </tr>
-        </thead>
-        <tbody id="grey-body">
-          <tr><td colspan="15" style="text-align:center;color:var(--muted);padding:22px">No grey rolls added yet. Add your finished product rolls above.</td></tr>
-        </tbody>
-      </table>
-    </div>
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
   </div>
 
   <!-- 📈 SUMMARY METRICS GRID -->
@@ -537,13 +443,8 @@
       </select>
       <select id="ready-grade-filter" style="padding:6px 12px; border:1px solid #cbd5e1; border-radius:6px;">
         <option value="">All Grades</option>
-<<<<<<< HEAD
         <option value="Sell">Sell</option>
         <option value="Defective">Defective</option>
-=======
-        <option value="Standard">Standard</option>
-        <option value="Second Quality">Second Quality</option>
->>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
       </select>
       <input type="text" id="ready-search" placeholder="Search item, weave, code..." style="padding:6px 12px; border:1px solid #cbd5e1; border-radius:6px; width:220px;">
     </div>
