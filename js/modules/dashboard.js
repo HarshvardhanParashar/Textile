@@ -49,7 +49,11 @@ export async function renderDashboard() {
                 ? recentGrey.map(r => `
                     <tr>
                         <td><strong style="font-family:var(--mono)">${r.no}</strong></td>
+<<<<<<< HEAD
                         <td>${r.construction || 'Finished Fabric'}</td>
+=======
+                        <td>${r.weave || 'Plain'}</td>
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
                         <td><strong>${r.meters}</strong> m</td>
                         <td><span class="q-badge q-${r.quality || 'Pending'}">${r.quality || 'Pending'}</span></td>
                     </tr>

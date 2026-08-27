@@ -6,7 +6,10 @@ import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
+<<<<<<< HEAD
 import GreyRoll from './models/GreyRoll.js';
+=======
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
 
 // Routes
 import inwardRoutes from './routes/inwardRoutes.js';
@@ -23,8 +26,12 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const app = express();
+<<<<<<< HEAD
 const HOST = process.env.HOST || 'localhost';
 const PORT = Number(process.env.PORT) || 5000;
+=======
+const PORT = process.env.PORT || 5000;
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
 const connString = process.env.MONGO_URI || process.env.MONGODB_URI;
 
 app.use(cors());
@@ -42,8 +49,13 @@ app.use('/api/readytosell', readyToSellRoutes);
 // 2. STATIC FILES
 app.use(express.static(path.join(__dirname, '../')));
 
+<<<<<<< HEAD
 // 3. SPA CATCH-ALL MUST IGNORE API ROUTES
 app.get(/^(?!\/api\/).*/, (req, res) => {
+=======
+// 3. SPA WILDCARD CATCH-ALL MUST BE LAST
+app.get('/*splat', (req, res) => {
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
     res.sendFile(path.join(__dirname, '../index.html'));
 });
 
@@ -52,6 +64,7 @@ mongoose.connect(connString)
 .then(async () => {
     console.log('📦 MongoDB Atlas Connected Safely.');
 
+<<<<<<< HEAD
     await GreyRoll.updateMany(
         {},
         {
@@ -77,6 +90,8 @@ mongoose.connect(connString)
     );
     console.log('✅ Grey roll fields migrated.');
 
+=======
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
     const User = (await import('./models/User.js')).default;
     const superAdminExists = await User.findOne({ username: 'yashg' });
     if (!superAdminExists) {
@@ -89,9 +104,13 @@ mongoose.connect(connString)
         console.log('✅ Super admin seeded: yashg / pass123');
     }
 
+<<<<<<< HEAD
     app.listen(PORT, HOST, () => {
         console.log(`🚀 Server running on http://${HOST}:${PORT}`);
     });
+=======
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
 })
 .catch((err) => {
     console.error('❌ Database error:', err.message);

@@ -2,6 +2,7 @@ import express from 'express';
 import Inward from '../models/Inward.js';
 const router = express.Router();
 
+<<<<<<< HEAD
 const normalizeLookupValue = (value) => String(value ?? '')
   .trim()
   .toLowerCase()
@@ -25,6 +26,8 @@ const matchesLookupValue = (storedValue, lookupValue) => {
   );
 };
 
+=======
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
 // 📋 GET: Fetch all Inward entries
 router.get('/', async (req, res) => {
     try {
@@ -60,6 +63,7 @@ router.put('/:id', async (req, res) => {
         res.status(400).json({ error: err.message });
     }
 });
+<<<<<<< HEAD
 // GET details by beam number from Inward Stock
 router.get('/beam/:beamNo', async (req, res) => {
   try {
@@ -91,6 +95,24 @@ router.get('/loom/:loomNo', async (req, res) => {
     }
 
     res.json(match);
+=======
+// GET yarn details by beam number from Inward Stock
+router.get('/beam/:beamNo', async (req, res) => {
+  try {
+    const inwardData = await Inward.findOne({
+      $or: [
+        { beamNo: req.params.beamNo },
+        { id: req.params.beamNo },
+        { itemCode: req.params.beamNo }
+      ]
+    });
+
+    if (!inwardData) {
+      return res.status(404).json({ error: 'Beam Number not found in Inward Stock' });
+    }
+
+    res.json(inwardData);
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

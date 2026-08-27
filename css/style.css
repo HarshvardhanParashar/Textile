@@ -18,8 +18,11 @@ main { max-width: 1400px; margin: 0 auto; padding: 20px; }
 .page { display: none; }
 .page.active { display: block; }
 .hidden { display: none !important; }
+<<<<<<< HEAD
 .stock-pagination { display:flex; align-items:center; justify-content:center; gap:12px; padding:14px 0 2px; color:var(--muted); font-size:12px; }
 .stock-pagination button:disabled { opacity:0.45; cursor:not-allowed; }
+=======
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
 
 .login-screen {
     min-height: 100vh;
@@ -201,6 +204,7 @@ tr:last-child td { border-bottom: none; }
     gap: 12px;
 }
 
+<<<<<<< HEAD
 .challan-item-group + .challan-item-group { margin-top: 20px; }
 .challan-item-group-header {
     display: flex;
@@ -214,6 +218,8 @@ tr:last-child td { border-bottom: none; }
 }
 .challan-item-group-header span { color: #64748b; font-size: 12px; }
 
+=======
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
 .challan-item-card {
     display: flex;
     flex-direction: column;

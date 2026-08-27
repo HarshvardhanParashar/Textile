@@ -295,11 +295,18 @@ import { isSuperAdmin } from '../auth.js';
 
 let cachedGreyRolls = [];
 let editingRollNo = null; // Tracks whether we are adding (null) or editing (roll number string)
+<<<<<<< HEAD
 let greyDatePage = 0;
 
 export function setupGreyHandlers() {
     // Visibility toggles for "Other" dropdown options
     ['gr-quality'].forEach(id => {
+=======
+
+export function setupGreyHandlers() {
+    // Visibility toggles for "Other" dropdown options
+    ['gr-weave', 'gr-quality', 'gr-defect'].forEach(id => {
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
         const selectEl = document.getElementById(id);
         const customEl = document.getElementById(`${id}-custom`);
         selectEl?.addEventListener('change', (e) => {
@@ -309,6 +316,7 @@ export function setupGreyHandlers() {
         });
     });
 
+<<<<<<< HEAD
     // 🔴 AUTOFILL DETAILS FROM INWARD STOCK WHEN BEAM OR LOOM IS FILLED
     const applyInwardAutoFill = async (beamNo = '', loomNo = '', lookupBy = '') => {
         const normalizedBeam = (beamNo || '').trim();
@@ -359,6 +367,38 @@ export function setupGreyHandlers() {
     loomInput?.addEventListener('change', async (e) => {
         const loomNo = e.target.value.trim();
         await applyInwardAutoFill(document.getElementById('gr-beam')?.value || '', loomNo, 'loom');
+=======
+    // 🔴 AUTOFILL YARN & BEAM DETAILS FROM INWARD STOCK
+    const beamInput = document.getElementById('gr-beam');
+    beamInput?.addEventListener('change', async (e) => {
+        const beamNo = e.target.value.trim();
+        if (!beamNo) return;
+
+        try {
+            // Fetch inward record matching entered beam number
+            const beamData = await sendRequest(`inward/beam/${encodeURIComponent(beamNo)}`);
+
+            if (beamData) {
+                // Automatically populate Grey Roll form fields from Inward Stock
+                if (document.getElementById('gr-warp-count')) {
+                    document.getElementById('gr-warp-count').value = beamData.yarnCount || beamData.count || '';
+                }
+                if (document.getElementById('gr-warp-yarn')) {
+                    document.getElementById('gr-warp-yarn').value = beamData.yarnType || '';
+                }
+                if (document.getElementById('gr-loom')) {
+                    document.getElementById('gr-loom').value = beamData.loomNo || beamData.machineNo || beamData.loom || '';
+                }
+                if (document.getElementById('gr-epi')) {
+                    document.getElementById('gr-epi').value = beamData.epi || '';
+                }
+
+                showToast(`✨ Beam #${beamNo} specs loaded from Inward Stock!`);
+            }
+        } catch (err) {
+            showToast(`⚠️ Beam #${beamNo} not found in Inward Stock.`, 'error');
+        }
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
     });
 
     // Unified Add / Update Grey Roll Handler
@@ -371,14 +411,26 @@ export function setupGreyHandlers() {
             return;
         }
 
+<<<<<<< HEAD
         const qualitySelect = document.getElementById('gr-quality').value;
         const finalQuality = qualitySelect === 'Defective' ? 'Defective' : 'Sell';
+=======
+        const weaveSelect = document.getElementById('gr-weave').value;
+        const finalWeave = weaveSelect === 'Other' ? document.getElementById('gr-weave-custom').value.trim() : weaveSelect;
+
+        const qualitySelect = document.getElementById('gr-quality').value;
+        const finalQuality = qualitySelect === 'Other' ? document.getElementById('gr-quality-custom').value.trim() : qualitySelect;
+
+        const defectSelect = document.getElementById('gr-defect').value;
+        const finalDefect = defectSelect === 'Other' ? document.getElementById('gr-defect-custom').value.trim() : (defectSelect || 'None');
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
 
         const payload = {
             no: rollNo,
             date: document.getElementById('gr-date').value || new Date().toISOString().split('T')[0],
             beam: document.getElementById('gr-beam').value.trim(),
             loom: document.getElementById('gr-loom').value.trim(),
+<<<<<<< HEAD
             construction: document.getElementById('gr-construction').value.trim(),
             width: parseFloat(document.getElementById('gr-width').value) || 0,
             meters: mtrs,
@@ -386,6 +438,27 @@ export function setupGreyHandlers() {
             quality: finalQuality,
             remarks: document.getElementById('gr-remarks').value.trim(),
             status: finalQuality === 'Sell' ? 'Ready' : 'In Stock'
+=======
+            weaver: document.getElementById('gr-weaver').value.trim(),
+            construction: document.getElementById('gr-construction').value.trim(),
+            weave: finalWeave,
+            width: parseFloat(document.getElementById('gr-width').value) || 0,
+            meters: mtrs,
+            weight: parseFloat(document.getElementById('gr-weight').value) || 0,
+            epi: parseInt(document.getElementById('gr-epi').value) || 0,
+            ppi: parseInt(document.getElementById('gr-ppi').value) || 0,
+            warpCount: document.getElementById('gr-warp-count').value.trim(),
+            weftCount: document.getElementById('gr-weft-count').value.trim(),
+            warpYarn: document.getElementById('gr-warp-yarn').value.trim(),
+            weftYarn: document.getElementById('gr-weft-yarn').value.trim(),
+            rate: parseFloat(document.getElementById('gr-rate').value) || 0,
+            quality: finalQuality || 'Pending',
+            defect: finalDefect,
+            shrink: parseFloat(document.getElementById('gr-shrink').value) || 0,
+            crimp: parseFloat(document.getElementById('gr-crimp').value) || 0,
+            remarks: document.getElementById('gr-remarks').value.trim(),
+            status: finalQuality === 'Standard' ? 'Ready' : 'In Stock'
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
         };
 
         try {
@@ -406,10 +479,14 @@ export function setupGreyHandlers() {
         }
     };
 
+<<<<<<< HEAD
     window.filterGrey = () => {
         greyDatePage = 0;
         renderGreyTableUI(cachedGreyRolls);
     };
+=======
+    window.filterGrey = () => renderGreyTableUI(cachedGreyRolls);
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
 }
 
 export async function renderGreyTable() {
@@ -418,7 +495,11 @@ export async function renderGreyTable() {
         renderGreyTableUI(cachedGreyRolls);
     } catch (err) {
         const tbody = document.getElementById('grey-body');
+<<<<<<< HEAD
         if (tbody) tbody.innerHTML = '<tr><td colspan="11" style="color:red;text-align:center;">Failed to sync stock list.</td></tr>';
+=======
+        if (tbody) tbody.innerHTML = '<tr><td colspan="15" style="color:red;text-align:center;">Failed to sync stock list.</td></tr>';
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
     }
 }
 
@@ -430,19 +511,27 @@ function renderGreyTableUI(rolls) {
     const filterGrade = document.getElementById('grey-filter-grade')?.value || '';
     const filterStatus = document.getElementById('grey-filter-status')?.value || '';
     const searchVal = document.getElementById('grey-search')?.value.toLowerCase() || '';
+<<<<<<< HEAD
     const selectedDate = document.getElementById('grey-filter-date')?.value || '';
     const showAllDates = document.getElementById('grey-show-all-dates')?.checked || false;
     const dates = [...new Set(rolls.map(getRollDate).filter(Boolean))].sort((a, b) => b.localeCompare(a));
     greyDatePage = Math.min(greyDatePage, Math.max(dates.length - 1, 0));
     const activeDate = showAllDates ? '' : selectedDate || dates[greyDatePage];
+=======
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
 
     let filtered = rolls.filter(r => {
         const matchGrade = !filterGrade || r.quality === filterGrade;
         const matchStatus = !filterStatus || r.status === filterStatus;
+<<<<<<< HEAD
         const matchSearch = !searchVal || [r.no, r.beam, r.loom, r.construction]
             .some(value => String(value || '').toLowerCase().includes(searchVal));
         const matchDate = !activeDate || getRollDate(r) === activeDate;
         return matchGrade && matchStatus && matchSearch && matchDate;
+=======
+        const matchSearch = !searchVal || r.no.toLowerCase().includes(searchVal) || (r.weave && r.weave.toLowerCase().includes(searchVal));
+        return matchGrade && matchStatus && matchSearch;
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
     });
 
     tbody.innerHTML = filtered.map(r => {
@@ -459,15 +548,27 @@ function renderGreyTableUI(rolls) {
                 <td>${r.date || '—'}</td>
                 <td>${r.beam || '—'}</td>
                 <td>${r.loom || '—'}</td>
+<<<<<<< HEAD
+=======
+                <td>${r.weave || '—'}</td>
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
                 <td>${r.construction || '—'}</td>
                 <td>${r.width ? r.width + '"' : '—'}</td>
                 <td><strong>${r.meters}</strong> m</td>
                 <td>${r.weight ? r.weight + ' kg' : '—'}</td>
+<<<<<<< HEAD
                 <td><span class="q-badge q-${r.quality || 'Sell'}">${r.quality || 'Sell'}</span></td>
+=======
+                <td>${r.epi || '0'}/${r.ppi || '0'}</td>
+                <td><span class="q-badge q-${r.quality || 'Pending'}">${r.quality || 'Pending'}</span></td>
+                <td>${r.defect || 'None'}</td>
+                <td>${r.rate ? '₹' + r.rate : '—'}</td>
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
                 <td><span class="status-badge ${r.status === 'Ready' ? 's-ready' : r.status === 'Sold' ? 's-sold' : 's-in'}">${r.status}</span></td>
                 <td>${actions}</td>
             </tr>
         `;
+<<<<<<< HEAD
     }).join('') || '<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:22px">No matching grey rolls found.</td></tr>';
 
     const dateLabel = activeDate ? new Date(`${activeDate}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'No dates';
@@ -487,6 +588,9 @@ function renderGreyTableUI(rolls) {
             renderGreyTableUI(cachedGreyRolls);
         });
     }
+=======
+    }).join('') || '<tr><td colspan="15" style="text-align:center;color:var(--muted);padding:22px">No matching grey rolls found.</td></tr>';
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
 
     if (!canManage) return;
 
@@ -522,10 +626,13 @@ function renderGreyTableUI(rolls) {
     if (document.getElementById('gs-sold')) document.getElementById('gs-sold').textContent = soldRolls;
 }
 
+<<<<<<< HEAD
 function getRollDate(roll) {
     return roll.date || (roll.createdAt ? String(roll.createdAt).slice(0, 10) : '');
 }
 
+=======
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
 // Populate form fields for Edit Mode
 function editGreyRoll(rollNo) {
     const roll = cachedGreyRolls.find(r => r.no === rollNo);
@@ -543,13 +650,35 @@ function editGreyRoll(rollNo) {
     if (document.getElementById('gr-date')) document.getElementById('gr-date').value = roll.date || '';
     if (document.getElementById('gr-beam')) document.getElementById('gr-beam').value = roll.beam || '';
     if (document.getElementById('gr-loom')) document.getElementById('gr-loom').value = roll.loom || '';
+<<<<<<< HEAD
+=======
+    if (document.getElementById('gr-weaver')) document.getElementById('gr-weaver').value = roll.weaver || '';
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
     if (document.getElementById('gr-construction')) document.getElementById('gr-construction').value = roll.construction || '';
     if (document.getElementById('gr-width')) document.getElementById('gr-width').value = roll.width || '';
     if (document.getElementById('gr-meters')) document.getElementById('gr-meters').value = roll.meters || '';
     if (document.getElementById('gr-weight')) document.getElementById('gr-weight').value = roll.weight || '';
+<<<<<<< HEAD
     if (document.getElementById('gr-remarks')) document.getElementById('gr-remarks').value = roll.remarks || '';
 
     setSelectOrCustom('gr-quality', roll.quality);
+=======
+    if (document.getElementById('gr-epi')) document.getElementById('gr-epi').value = roll.epi || '';
+    if (document.getElementById('gr-ppi')) document.getElementById('gr-ppi').value = roll.ppi || '';
+    if (document.getElementById('gr-warp-count')) document.getElementById('gr-warp-count').value = roll.warpCount || '';
+    if (document.getElementById('gr-weft-count')) document.getElementById('gr-weft-count').value = roll.weftCount || '';
+    if (document.getElementById('gr-warp-yarn')) document.getElementById('gr-warp-yarn').value = roll.warpYarn || '';
+    if (document.getElementById('gr-weft-yarn')) document.getElementById('gr-weft-yarn').value = roll.weftYarn || '';
+    if (document.getElementById('gr-rate')) document.getElementById('gr-rate').value = roll.rate || '';
+    if (document.getElementById('gr-shrink')) document.getElementById('gr-shrink').value = roll.shrink || '';
+    if (document.getElementById('gr-crimp')) document.getElementById('gr-crimp').value = roll.crimp || '';
+    if (document.getElementById('gr-remarks')) document.getElementById('gr-remarks').value = roll.remarks || '';
+
+    // Handle Dropdowns & Custom Select Inputs
+    setSelectOrCustom('gr-weave', roll.weave);
+    setSelectOrCustom('gr-quality', roll.quality);
+    setSelectOrCustom('gr-defect', roll.defect);
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
 
     // Dynamic UI State Updates
     const submitBtn = document.querySelector('.btn-grey');
@@ -587,8 +716,19 @@ function setSelectOrCustom(id, value) {
             custom.style.display = 'none';
             custom.value = '';
         }
+<<<<<<< HEAD
     } else {
         select.value = 'Sell';
+=======
+    } else if (value) {
+        select.value = 'Other';
+        if (custom) {
+            custom.style.display = 'block';
+            custom.value = value;
+        }
+    } else {
+        select.value = '';
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
         if (custom) {
             custom.style.display = 'none';
             custom.value = '';
@@ -600,7 +740,11 @@ function setSelectOrCustom(id, value) {
 function resetSingleForm() {
     editingRollNo = null;
 
+<<<<<<< HEAD
     ['gr-no', 'gr-beam', 'gr-loom', 'gr-construction', 'gr-width', 'gr-meters', 'gr-weight', 'gr-remarks'].forEach(id => {
+=======
+    ['gr-no', 'gr-beam', 'gr-loom', 'gr-weaver', 'gr-construction', 'gr-width', 'gr-meters', 'gr-weight', 'gr-epi', 'gr-ppi', 'gr-warp-count', 'gr-weft-count', 'gr-warp-yarn', 'gr-weft-yarn', 'gr-rate', 'gr-shrink', 'gr-crimp', 'gr-remarks', 'gr-weave-custom', 'gr-quality-custom', 'gr-defect-custom'].forEach(id => {
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
@@ -608,7 +752,18 @@ function resetSingleForm() {
     const rollNoInput = document.getElementById('gr-no');
     if (rollNoInput) rollNoInput.disabled = false;
 
+<<<<<<< HEAD
     if (document.getElementById('gr-quality')) document.getElementById('gr-quality').value = 'Sell';
+=======
+    if (document.getElementById('gr-weave')) document.getElementById('gr-weave').value = '';
+    if (document.getElementById('gr-quality')) document.getElementById('gr-quality').value = '';
+    if (document.getElementById('gr-defect')) document.getElementById('gr-defect').value = '';
+
+    ['gr-weave-custom', 'gr-quality-custom', 'gr-defect-custom'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+>>>>>>> d6aab64ac6f5814b2604a2078992b1890cc0f34c
 
     const submitBtn = document.querySelector('.btn-grey');
     if (submitBtn) {
