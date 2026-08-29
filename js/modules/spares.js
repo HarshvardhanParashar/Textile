@@ -22,12 +22,9 @@ export function setupSpareHandlers() {
 
     const payload = {
       name,
-      code: document.getElementById('sp-code').value.trim(),
-      machineType: document.getElementById('sp-machine').value,
       quantity: qty,
       unit: document.getElementById('sp-unit').value,
       supplier: document.getElementById('sp-supplier').value.trim(),
-      cost: parseFloat(document.getElementById('sp-cost').value) || 0,
       minStock: parseFloat(document.getElementById('sp-min').value) || 0,
       dateAdded: document.getElementById('sp-date').value || new Date().toISOString(),
       remarks: document.getElementById('sp-remarks').value.trim()
@@ -132,18 +129,16 @@ function renderInventoryTable(spares) {
   const canManage = isSuperAdmin();
   const filtered = spares.filter(s =>
     s.name.toLowerCase().includes(query) ||
-    (s.code && s.code.toLowerCase().includes(query)) ||
-    (s.machineType && s.machineType.toLowerCase().includes(query))
+    (s.supplier && s.supplier.toLowerCase().includes(query))
   );
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:#94a3b8; padding:22px;">No matching spare parts found</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#94a3b8; padding:22px;">No matching spare parts found</td></tr>`;
     return;
   }
 
   tbody.innerHTML = filtered.map(s => {
     const totalIssued = s.issuances ? s.issuances.reduce((acc, i) => acc + i.qtyIssued, 0) : 0;
-    const totalValue = (s.quantity * s.cost).toFixed(2);
     const isLow = s.quantity <= s.minStock;
     const statusBadge = isLow
       ? `<span style="background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:4px; font-weight:600; font-size:11px;">Low Stock</span>`
@@ -154,14 +149,10 @@ function renderInventoryTable(spares) {
     return `
       <tr style="border-bottom:1px solid #f1f5f9;">
         <td style="padding:10px;"><strong>${s.name}</strong></td>
-        <td style="padding:10px;">${s.code || '—'}</td>
-        <td style="padding:10px;">${s.machineType || '—'}</td>
         <td style="padding:10px;"><strong>${s.quantity}</strong></td>
         <td style="padding:10px;">${totalIssued}</td>
         <td style="padding:10px;">${s.unit}</td>
         <td style="padding:10px;">${s.supplier || '—'}</td>
-        <td style="padding:10px;">₹${s.cost.toFixed(2)}</td>
-        <td style="padding:10px;">₹${totalValue}</td>
         <td style="padding:10px;">${statusBadge}</td>
         ${deleteCell}
       </tr>

@@ -40,7 +40,12 @@
                 </div>
             </div>
             <div class="header-actions">
-                <div class="header-date" id="headerDate"></div>
+                <div class="outlet-picker">
+                    <label for="activeOutletSelect">Factory Outlet</label>
+                    <select id="activeOutletSelect">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
                 <button id="logoutBtn" class="btn logout-btn btn-sm">Logout</button>
             </div>
         </header>
@@ -59,6 +64,44 @@
 <div class="page active" id="page-dashboard">
   <div class="section-title">Dashboard</div>
   <div class="section-sub">Live overview of your textile business</div>
+
+  <div class="card outlet-card hidden">
+    <div class="card-header">
+      <span class="card-title">Factory Outlets</span>
+    </div>
+
+    <div class="admin-form-grid">
+      <div class="form-group">
+        <label>Outlet Name</label>
+        <input id="newOutletName" type="text" placeholder="e.g. Factory-1">
+      </div>
+      <div class="form-group">
+        <label>Location</label>
+        <input id="newOutletLocation" type="text" placeholder="e.g. Jaipur">
+      </div>
+      <div class="form-group">
+        <label>Code</label>
+        <input id="newOutletCode" type="text" placeholder="e.g. F-01">
+      </div>
+    </div>
+
+    <div class="admin-actions">
+      <button id="createOutletBtn" class="btn btn-primary">Add Outlet</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Location</th>
+            <th>Code</th>
+          </tr>
+        </thead>
+        <tbody id="outletTableBody"></tbody>
+      </table>
+    </div>
+  </div>
 
   <div id="adminUserCard" class="card admin-user-card hidden">
     <div class="card-header">
@@ -249,6 +292,7 @@
           
           <!-- Row 4 -->
           <div class="form-group"><label>Loom / Machine No *</label><input type="text" id="wb-loom" placeholder="e.g. Loom-3, Machine-A"></div>
+          <div class="form-group"><label>Fabric Construction</label><input type="text" id="wb-construction" placeholder="e.g. 20*20*60*54"></div>
           <div class="form-group"><label>Lot / Batch No</label><input type="text" id="wb-lot" placeholder="Lot or batch number"></div>
           
           <!-- Row 5 -->
@@ -421,14 +465,7 @@
       <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">TOTAL METERS AVAILABLE</div>
       <div id="rts-total-meters" style="font-size:24px; font-weight:700; color:#0f172a;">0 m</div>
     </div>
-    <div class="kpi-card" style="background:#fff; padding:16px; border-radius:8px; border:1px solid #e2e8f0; flex:1;">
-      <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">AVG RATE (₹/M)</div>
-      <div id="rts-avg-rate" style="font-size:24px; font-weight:700; color:#0f172a;">₹0.00</div>
-    </div>
-    <div class="kpi-card" style="background:#fff; padding:16px; border-radius:8px; border:1px solid #e2e8f0; flex:1;">
-      <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">TOTAL READY VALUE</div>
-      <div id="rts-total-value" style="font-size:24px; font-weight:700; color:#10b981;">₹0.00</div>
-    </div>
+    
   </div>
 
   <!-- Filters Bar -->
@@ -687,20 +724,16 @@
         <thead>
           <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0; text-align:left; color:#64748b; font-size:11px; text-transform:uppercase;">
             <th style="padding:10px;">Part Name</th>
-            <th style="padding:10px;">Code</th>
-            <th style="padding:10px;">Machine Type</th>
             <th style="padding:10px;">In Stock</th>
             <th style="padding:10px;">Total Issued</th>
             <th style="padding:10px;">Unit</th>
             <th style="padding:10px;">Supplier</th>
-            <th style="padding:10px;">Cost</th>
-            <th style="padding:10px;">Total Value</th>
             <th style="padding:10px;">Status</th>
             <th style="padding:10px;">Actions</th>
           </tr>
         </thead>
         <tbody id="spare-body">
-          <tr><td colspan="11" style="text-align:center; color:#94a3b8; padding:22px;">No spare parts added yet</td></tr>
+          <tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:22px;">No spare parts added yet</td></tr>
         </tbody>
       </table>
     </div>

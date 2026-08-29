@@ -337,9 +337,20 @@ export function setupGreyHandlers() {
             if (loomField && (lookupBy === 'beam' || !loomField.value.trim())) {
                 loomField.value = record.wbLoom || normalizedLoom;
             }
+            const constructionField = document.getElementById('gr-construction');
+            if (constructionField && !constructionField.value.trim() && (record.construction || record.fabricConstruction)) {
+                constructionField.value = record.construction || record.fabricConstruction;
+            }
+
+            const remainingMeters = Number(record.remainingMeters ?? (Number(record.wbLength || 0) - Number(record.usedMeters || 0))) || 0;
+            if (remainingMeters <= 0) {
+                showToast(`⚠️ Beam ${normalizedBeam || normalizedLoom} is fully consumed. No more allocation allowed.`, 'error');
+                return;
+            }
+
             const usedBeam = beamField?.value || normalizedBeam || 'Beam';
             const usedLoom = loomField?.value || normalizedLoom || 'Loom';
-            showToast(`✨ Inward details loaded for ${usedBeam} / ${usedLoom}!`);
+            showToast(`✨ Inward details loaded for ${usedBeam} / ${usedLoom}! Remaining: ${remainingMeters} m`);
         } catch (err) {
             if (normalizedBeam) {
                 showToast(`⚠️ Beam #${normalizedBeam} not found in Inward Stock.`, 'error');
@@ -374,10 +385,29 @@ export function setupGreyHandlers() {
         const qualitySelect = document.getElementById('gr-quality').value;
         const finalQuality = qualitySelect === 'Defective' ? 'Defective' : 'Sell';
 
+        const beamValue = document.getElementById('gr-beam').value.trim();
+        if (beamValue) {
+            try {
+                const beamRecord = await sendRequest(`inward/beam/${encodeURIComponent(beamValue)}`);
+                const remainingMeters = Number(beamRecord.remainingMeters ?? (Number(beamRecord.wbLength || 0) - Number(beamRecord.usedMeters || 0))) || 0;
+                if (remainingMeters <= 0) {
+                    showToast(`⚠️ Beam ${beamValue} has no remaining meters left.`, 'error');
+                    return;
+                }
+                if (mtrs > remainingMeters) {
+                    showToast(`⚠️ Beam ${beamValue} has only ${remainingMeters} m left. You cannot add ${mtrs} m.`, 'error');
+                    return;
+                }
+            } catch (err) {
+                showToast(`⚠️ Beam ${beamValue} not found in inward stock.`, 'error');
+                return;
+            }
+        }
+
         const payload = {
             no: rollNo,
             date: document.getElementById('gr-date').value || new Date().toISOString().split('T')[0],
-            beam: document.getElementById('gr-beam').value.trim(),
+            beam: beamValue,
             loom: document.getElementById('gr-loom').value.trim(),
             construction: document.getElementById('gr-construction').value.trim(),
             width: parseFloat(document.getElementById('gr-width').value) || 0,

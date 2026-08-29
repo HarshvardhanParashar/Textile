@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const readyToSellSchema = new mongoose.Schema({
+  outletId: { type: mongoose.Schema.Types.ObjectId, ref: 'Outlet', default: null },
   itemCode: { type: String, required: true, unique: true },
   sourceGreyRollId: { type: mongoose.Schema.Types.ObjectId, ref: 'GreyRoll' },
   fabricType: { type: String, required: true },

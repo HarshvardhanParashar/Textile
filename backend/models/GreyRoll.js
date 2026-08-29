@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const GreyRollSchema = new mongoose.Schema({
+    outletId: { type: mongoose.Schema.Types.ObjectId, ref: 'Outlet', default: null },
     no: { type: String, required: true, unique: true },
     date: { type: String, required: true },
     beam: { type: String, default: '' },       // Beam / Warp reference entered in form

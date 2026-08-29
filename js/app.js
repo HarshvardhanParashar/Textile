@@ -1,4 +1,4 @@
-import { showToast } from './api.js';
+import { showToast, sendRequest, getActiveOutletId, setActiveOutletId } from './api.js';
 import { renderReadyToSellPage, setupReadyHandlers } from './modules/readytosell.js';
 import { renderDashboard } from './modules/dashboard.js';
 import { setupInwardHandlers, renderInwardTable } from './modules/inward.js';
@@ -18,8 +18,46 @@ import {
 
 const appShell = () => document.getElementById('appShell');
 const loginScreen = () => document.getElementById('loginScreen');
+let currentPage = 'dashboard';
+
+async function loadOutlets() {
+    const outletSelect = document.getElementById('activeOutletSelect');
+    const outletRows = document.getElementById('outletTableBody');
+    if (!outletSelect && !outletRows) return;
+
+    try {
+        const outlets = await sendRequest('outlets');
+        if (outletSelect) {
+            let activeOutletId = getActiveOutletId();
+            if (!activeOutletId && outlets.length) {
+                activeOutletId = outlets[0]._id;
+                setActiveOutletId(activeOutletId);
+            }
+            outletSelect.innerHTML = '<option value="">All outlets</option>' + outlets.map((outlet) => `
+                <option value="${outlet._id}" ${outlet._id === activeOutletId ? 'selected' : ''}>${outlet.name}${outlet.location ? ` — ${outlet.location}` : ''}</option>
+            `).join('');
+            outletSelect.value = activeOutletId || '';
+        }
+
+        if (outletRows) {
+            outletRows.innerHTML = outlets.length
+                ? outlets.map(outlet => `
+                    <tr>
+                        <td>${outlet.name}</td>
+                        <td>${outlet.location || '-'}</td>
+                        <td>${outlet.code || '-'}</td>
+                    </tr>
+                `).join('')
+                : '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:12px">No outlets created yet.</td></tr>';
+        }
+    } catch (error) {
+        console.error('Unable to load outlets:', error);
+        if (outletSelect) outletSelect.innerHTML = '<option value="">All outlets</option>';
+    }
+}
 
 window.showPage = async function showPage(page) {
+    currentPage = page;
     const navButtons = document.querySelectorAll('#mainNav .nav-btn');
     navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.page === page));
 
@@ -38,10 +76,6 @@ window.showPage = async function showPage(page) {
 document.addEventListener('DOMContentLoaded', async () => {
     ensureUsersSeeded();
 
-    document.getElementById('headerDate').textContent = new Date().toLocaleDateString('en-IN', {
-        weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
-    });
-
     setupRouter();
     setupLogin();
     setupUserManagement();
@@ -52,6 +86,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupChallanHandlers();
     setupSpareHandlers();
 
+    document.getElementById('activeOutletSelect')?.addEventListener('change', async (event) => {
+        const selectedValue = event.target.value;
+        setActiveOutletId(selectedValue);
+        await loadOutlets();
+        await window.showPage(currentPage || 'dashboard');
+    });
+
+    document.getElementById('createOutletBtn')?.addEventListener('click', async () => {
+        const nameInput = document.getElementById('newOutletName');
+        const locationInput = document.getElementById('newOutletLocation');
+        const codeInput = document.getElementById('newOutletCode');
+
+        const name = nameInput?.value.trim();
+        if (!name) {
+            showToast('Outlet name is required.');
+            return;
+        }
+
+        const outlet = await sendRequest('outlets', 'POST', {
+            name,
+            location: locationInput?.value.trim() || '',
+            code: codeInput?.value.trim() || ''
+        });
+
+        setActiveOutletId(outlet._id);
+        if (nameInput) nameInput.value = '';
+        if (locationInput) locationInput.value = '';
+        if (codeInput) codeInput.value = '';
+
+        await loadOutlets();
+        await window.showPage(currentPage || 'dashboard');
+        showToast(`Outlet ${outlet.name} selected.`);
+    });
+
+    await loadOutlets();
     await renderDashboard();
     renderAuthUI();
 });
@@ -140,12 +209,12 @@ async function renderAuthUI() {
 
     const isAdmin = isSuperAdmin(currentUser);
     adminCard?.classList.toggle('hidden', !isAdmin);
+    const outletCard = document.querySelector('.outlet-card');
+    outletCard?.classList.toggle('hidden', !isAdmin);
+    const outletAddBtn = document.getElementById('createOutletBtn');
+    outletAddBtn?.classList.toggle('hidden', !isAdmin);
     if (isAdmin) await renderUserList();
 
-    const label = document.getElementById('headerDate');
-    if (label) label.textContent = new Date().toLocaleDateString('en-IN', {
-        weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
-    });
 }
 
 function setupRouter() {

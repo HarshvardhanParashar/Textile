@@ -9,6 +9,7 @@ const IssuanceSchema = new mongoose.Schema({
 });
 
 const SparePartSchema = new mongoose.Schema({
+  outletId: { type: mongoose.Schema.Types.ObjectId, ref: 'Outlet', default: null },
   name: { type: String, required: true },
   code: { type: String, default: '' },
   machineType: { type: String, default: '' },

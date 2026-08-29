@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 const InwardSchema = new mongoose.Schema({
+    outletId: { type: mongoose.Schema.Types.ObjectId, ref: 'Outlet', default: null },
     id: { type: String, required: true, unique: true },
     type: { type: String, required: true, enum: ['yarn', 'beam'] },
     date: { type: String, required: true },
@@ -22,7 +23,10 @@ const InwardSchema = new mongoose.Schema({
     wbWeight: { type: Number, default: 0 },
     wbNetYarn: { type: Number, default: 0 },
     wbEpi: { type: Number },
-    wbLoom: { type: String }
+    wbLoom: { type: String },
+    construction: { type: String, default: '' },
+    usedMeters: { type: Number, default: 0 },
+    remainingMeters: { type: Number, default: 0 }
 }, { timestamps: true });
 
 export default mongoose.model('Inward', InwardSchema);

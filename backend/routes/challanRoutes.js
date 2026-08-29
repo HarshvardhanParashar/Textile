@@ -13,6 +13,11 @@ try {
 
 const router = express.Router();
 
+const getOutletFilter = (req) => {
+  const outletId = String(req.query.outletId || req.body?.outletId || '').trim();
+  return outletId ? { outletId } : {};
+};
+
 // 🔴 Auto-drop the old lingering "no_1" index from MongoDB as soon as routes initialize
 Challan.collection.dropIndex('no_1').catch(() => {
   // Index already dropped or doesn't exist - safely ignore error
@@ -21,7 +26,8 @@ Challan.collection.dropIndex('no_1').catch(() => {
 // GET all available rolls for selection in challan UI
 router.get('/ready-rolls', async (req, res) => {
   try {
-    const rolls = await GreyRoll.find({ status: { $ne: 'Dispatched' } });
+    const outletFilter = getOutletFilter(req);
+    const rolls = await GreyRoll.find({ status: { $ne: 'Dispatched' }, ...outletFilter });
     res.json(rolls);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -31,7 +37,7 @@ router.get('/ready-rolls', async (req, res) => {
 // GET all issued active challans
 router.get('/', async (req, res) => {
   try {
-    const challans = await Challan.find({ isDeleted: { $ne: true } }).sort({ createdAt: -1 });
+    const challans = await Challan.find({ isDeleted: { $ne: true }, ...getOutletFilter(req) }).sort({ createdAt: -1 });
     res.json(challans);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -45,8 +51,18 @@ router.post('/', async (req, res) => {
 
   try {
     const { partyName, address, gstOrMobile, transport, deliveryDate, remarks, items } = req.body;
+    const outletId = String(req.body.outletId || req.query.outletId || '').trim() || null;
 
-    if (!partyName || !items || !items.length) {
+    const normalizedItems = (items || []).map(item => ({
+      ...item,
+      rollNo: item.rollNo || item.no || 'Item',
+      quality: item.quality || '',
+      remarks: item.remarks || '',
+      meters: Number(item.meters || 0),
+      weight: Number(item.weight || 0)
+    }));
+
+    if (!partyName || !normalizedItems.length) {
       await session.abortTransaction();
       session.endSession();
       return res.status(400).json({ error: 'Party Name and at least 1 item are required' });
@@ -61,10 +77,11 @@ router.post('/', async (req, res) => {
     }
     const challanNo = `CH-${nextNum}`;
 
-    const totalMeters = items.reduce((acc, item) => acc + (Number(item.meters) || 0), 0);
+    const totalMeters = normalizedItems.reduce((acc, item) => acc + (Number(item.meters) || 0), 0);
 
     // Create Challan Document (Setting 'no' explicitly fixes any fallback index issues)
     const challan = new Challan({
+      outletId: outletId || null,
       no: challanNo,
       challanNo,
       partyName,
@@ -73,15 +90,15 @@ router.post('/', async (req, res) => {
       transport,
       deliveryDate: deliveryDate || new Date(),
       remarks,
-      items,
-      totalItems: items.length,
+      items: normalizedItems,
+      totalItems: normalizedItems.length,
       totalMeters
     });
 
     await challan.save({ session });
 
     //  REMOVE / DELETE SELECTED ROLLS FROM INVENTORY
-    const rollIds = items.map(item => item._id || item.id).filter(Boolean);
+    const rollIds = normalizedItems.map(item => item._id || item.id).filter(Boolean);
 
     if (rollIds.length > 0) {
       // 1. Delete or mark as Dispatched in GreyRoll collection

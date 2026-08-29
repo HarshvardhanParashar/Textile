@@ -85,10 +85,13 @@ function renderReadyItemsSelector() {
   });
 
   container.innerHTML = [...groupedItems.entries()].map(([groupLabel, groupItems]) => `
-    <section class="challan-item-group">
-      <div class="challan-item-group-header">
+    <section class="challan-item-group collapsed">
+      <div class="challan-item-group-header" role="button" tabindex="0" onclick="toggleChallanGroup(this.closest('.challan-item-group'))" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleChallanGroup(this.closest('.challan-item-group')); }">
         <strong>${groupLabel}</strong>
-        <span>${groupItems.length} roll${groupItems.length === 1 ? '' : 's'} · ${groupItems.reduce((total, roll) => total + (Number(roll.meters) || 0), 0).toFixed(1)} m</span>
+        <div class="challan-group-meta">
+          <span>${groupItems.length} roll${groupItems.length === 1 ? '' : 's'} · ${groupItems.reduce((total, roll) => total + (Number(roll.meters) || 0), 0).toFixed(1)} m</span>
+          <span class="challan-toggle-icon">▾</span>
+        </div>
       </div>
       <div class="challan-items-grid">
         ${groupItems.map((roll, idx) => {
@@ -107,7 +110,7 @@ function renderReadyItemsSelector() {
                 <span>${roll.quality || 'Standard'}</span>
               </div>
               <div class="challan-item-footer">
-                <span>Ready stock</span>
+                <span>${roll.remarks || 'Ready stock'}</span>
                 <strong>₹${Number(roll.rate || 0).toFixed(2)}/m</strong>
               </div>
             </label>
@@ -121,11 +124,22 @@ function renderReadyItemsSelector() {
 }
 
 function getGroupLabel(item) {
-  const fabricType = String(item.fabricType || item.construction || 'Finished Fabric').trim();
-  const width = String(item.width || '').trim();
-  if (!width || fabricType.includes('=')) return fabricType;
-  return `${fabricType}=${width}"`;
+  const construction = String(item.construction || item.fabricType || item.pattern || '').trim();
+  const widthValue = Number(item.width || item.wide || item.weaveWidth || 0);
+
+  if (construction && widthValue) {
+    return `${construction}=${widthValue}''`;
+  }
+
+  if (construction) return construction;
+  if (widthValue) return `${widthValue}''`;
+  return 'Finished Fabric';
 }
+
+window.toggleChallanGroup = (group) => {
+  if (!group) return;
+  group.classList.toggle('collapsed');
+};
 
 window.toggleRollSelection = (rollId) => {
   if (selectedRollIds.has(rollId)) {
@@ -174,16 +188,16 @@ async function generateChallan() {
     return showToast('Please select at least 1 ready item for the challan', 'error');
   }
 
-  // Map selected items including their ID and source ('readytosell' vs 'greyrolls')
   const selectedItems = readyRollsList
     .filter(r => selectedRollIds.has(r.id || r._id))
     .map(r => ({
       _id: r._id || r.id,
-      source: r.itemCode ? 'readytosell' : 'greyrolls', // tracks item origin
+      source: r.itemCode ? 'readytosell' : 'greyrolls',
       rollNo: r.rollNo,
       quality: r.quality || '',
-      meters: r.meters || 0,
-      weight: r.weight || 0
+      remarks: r.remarks || '',
+      meters: Number(r.meters || 0),
+      weight: Number(r.weight || 0)
     }));
 
   const payload = {
@@ -259,71 +273,159 @@ function clearChallanForm() {
   updateSelectedSummary();
 }
 
+function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function printChallan(id) {
   sendRequest(`challans`).then(challans => {
     const c = challans.find(item => item._id === id);
     if (!c) return showToast('Challan record not found', 'error');
 
-    const printWin = window.open('', '_blank', 'width=800,height=600');
+    const totalMeters = Number(c.totalMeters || c.items.reduce((sum, item) => sum + Number(item.meters || 0), 0));
+    const totalItems = Number(c.totalItems || c.items.length);
+    const challanRemarks = c.remarks || '—';
+
+    const printWin = window.open('', '_blank', 'width=900,height=700');
     printWin.document.write(`
       <html>
         <head>
-          <title>Delivery Challan - ${c.challanNo}</title>
+          <title>Delivery Challan - ${escapeHtml(c.challanNo)}</title>
           <style>
-            body { font-family: sans-serif; padding: 24px; color: #000; }
-            h2 { text-align: center; margin-bottom: 4px; }
-            .header-info { display: flex; justify-content: space-between; margin-top: 20px; border-bottom: 2px solid #000; padding-bottom: 12px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-            th { background: #f2f2f2; }
-            .footer { margin-top: 40px; display: flex; justify-content: space-between; }
+            @page { size: A4 portrait; margin: 10mm; }
+            body {
+              font-family: Arial, sans-serif;
+              margin: 0;
+              padding: 0;
+              color: #111827;
+              background: #fff;
+              font-size: 11px;
+              line-height: 1.3;
+            }
+            .sheet {
+              width: 100%;
+              min-height: 100%;
+              box-sizing: border-box;
+              padding: 12px 16px 8px;
+            }
+            h2 {
+              margin: 0 0 8px;
+              text-align: center;
+              letter-spacing: 0.08em;
+              font-size: 18px;
+            }
+            .header-info {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 12px;
+              border-bottom: 2px solid #111827;
+              padding: 8px 0 10px;
+              margin-bottom: 10px;
+            }
+            .info-block strong { display: inline-block; min-width: 110px; }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 8px;
+              table-layout: fixed;
+            }
+            th, td {
+              border: 1px solid #111827;
+              padding: 5px 6px;
+              text-align: left;
+              vertical-align: top;
+              word-wrap: break-word;
+            }
+            th {
+              background: #f3f4f6;
+              font-size: 10px;
+              text-transform: uppercase;
+              letter-spacing: 0.04em;
+            }
+            .totals {
+              margin-top: 8px;
+              border: 1px solid #111827;
+              background: #f9fafb;
+              padding: 7px 8px;
+              font-weight: 700;
+            }
+            .remarks-box {
+              margin-top: 10px;
+              border: 1px solid #111827;
+              padding: 6px 8px;
+              min-height: 42px;
+            }
+            .footer {
+              display: flex;
+              justify-content: space-between;
+              gap: 16px;
+              margin-top: 14px;
+              border-top: 2px solid #111827;
+              padding-top: 8px;
+              font-weight: 600;
+            }
+            .signature {
+              width: 40%;
+              text-align: center;
+              border-top: 1px solid #111827;
+              padding-top: 6px;
+            }
           </style>
         </head>
         <body>
-          <h2>DELIVERY CHALLAN</h2>
-          <div class="header-info">
-            <div>
-              <strong>Challan No:</strong> ${c.challanNo}<br>
-              <strong>Date:</strong> ${new Date(c.deliveryDate).toLocaleDateString('en-IN')}<br>
-              <strong>Transport:</strong> ${c.transport || 'N/A'}
+          <div class="sheet">
+            <h2>DELIVERY CHALLAN</h2>
+            <div class="header-info">
+              <div class="info-block">
+                <div><strong>Challan No:</strong> ${escapeHtml(c.challanNo)}</div>
+                <div><strong>Date:</strong> ${new Date(c.deliveryDate).toLocaleDateString('en-IN')}</div>
+                <div><strong>Transport:</strong> ${escapeHtml(c.transport || 'N/A')}</div>
+              </div>
+              <div class="info-block">
+                <div><strong>Party:</strong> ${escapeHtml(c.partyName)}</div>
+                <div><strong>Address:</strong> ${escapeHtml(c.address || 'N/A')}</div>
+                <div><strong>GST/Mobile:</strong> ${escapeHtml(c.gstOrMobile || 'N/A')}</div>
+              </div>
             </div>
-            <div>
-              <strong>Party Name:</strong> ${c.partyName}<br>
-              <strong>Address:</strong> ${c.address || 'N/A'}<br>
-              <strong>GST/Mobile:</strong> ${c.gstOrMobile || 'N/A'}
-            </div>
-          </div>
 
-          <table>
-            <thead>
-              <tr>
-                <th>S.No</th>
-                <th>Roll / Item No</th>
-                <th>Quality</th>
-                <th>Meters</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${c.items.map((item, idx) => `
+            <table>
+              <thead>
                 <tr>
-                  <td>${idx + 1}</td>
-                  <td>${item.rollNo}</td>
-                  <td>${item.quality || '—'}</td>
-                  <td>${item.meters} m</td>
+                  <th style="width: 8%;">S.No</th>
+                  <th style="width: 35%;">Roll / Item No</th>
+                  <th style="width: 18%;">Meters</th>
+                  <th>Remarks</th>
                 </tr>
-              `).join('')}
-            </tbody>
-            <tfoot>
-              <tr>
-                <th colspan="3" style="text-align:right">Total Items: ${c.totalItems}</th>
-                <th>Total: ${c.totalMeters.toFixed(1)} m</th>
-              </tr>
-            </tfoot>
-          </table>
+              </thead>
+              <tbody>
+                ${c.items.map((item, idx) => `
+                  <tr>
+                    <td>${idx + 1}</td>
+                    <td>${escapeHtml(item.rollNo || '—')}</td>
+                    <td>${Number(item.meters || 0).toFixed(1)} m</td>
+                    <td>${escapeHtml(item.remarks || challanRemarks || '—')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
 
-          <div class="footer">
-            <div>Receiver's Signature</div>
-            <div>Authorised Signatory</div>
+            <div class="totals">
+              Total Items: ${totalItems} &nbsp;&nbsp; | &nbsp;&nbsp; Total Meters: ${Number(totalMeters).toFixed(1)} m
+            </div>
+
+            <div class="remarks-box">
+              <strong>Remarks:</strong> ${escapeHtml(challanRemarks)}
+            </div>
+
+            <div class="footer">
+              <div class="signature">Receiver's Signature</div>
+              <div class="signature">Authorised Signatory</div>
+            </div>
           </div>
           <script>window.print();</script>
         </body>

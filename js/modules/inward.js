@@ -73,7 +73,8 @@ export function setupInwardHandlers() {
             wbWeight: activeType === 'beam' ? (parseFloat(document.getElementById('wb-weight').value) || 0) : undefined,
             wbNetYarn: activeType === 'beam' ? (parseFloat(document.getElementById('wb-netyarn').value) || 0) : undefined,
             wbEpi: activeType === 'beam' ? (parseInt(document.getElementById('wb-epi').value) || 0) : undefined,
-            wbLoom: activeType === 'beam' ? document.getElementById('wb-loom').value.trim() : undefined
+            wbLoom: activeType === 'beam' ? document.getElementById('wb-loom').value.trim() : undefined,
+            construction: activeType === 'beam' ? document.getElementById('wb-construction').value.trim() : undefined
         };
 
         try {
@@ -137,8 +138,12 @@ function populateFormForEdit(record) {
         document.getElementById('wb-netyarn').value = record.wbNetYarn || '';
         document.getElementById('wb-epi').value = record.wbEpi || '';
         document.getElementById('wb-loom').value = record.wbLoom || '';
+        document.getElementById('wb-construction').value = record.construction || '';
         document.getElementById('wb-lot').value = record.lot || '';
         document.getElementById('wb-remarks').value = record.remarks || '';
+        if (typeof record.remainingMeters !== 'undefined') {
+            document.getElementById('wb-length').value = record.wbLength || record.remainingMeters || '';
+        }
 
         const wbSelect = document.getElementById('wb-yarntype');
         const wbCustomInput = document.getElementById('wb-type-custom');
@@ -214,8 +219,14 @@ function renderInwardTableUI(records) {
     });
 
     tbody.innerHTML = filtered.map(r => {
-            const specifications = r.type === 'yarn' ? `Weight: ${r.yrWeight || 0} kg` : `Ends: ${r.wbEnds || 0} | Loom: ${r.wbLoom || '—'}`;
-            const metrics = r.type === 'yarn' ? `${r.yrQty || 1} Rolls` : `${r.wbLength || 0} Meters`;
+            const usedMeters = Number(r.usedMeters || 0) || 0;
+            const remainingMeters = Number(r.remainingMeters ?? (Number(r.wbLength || 0) - usedMeters)) || 0;
+            const specifications = r.type === 'yarn'
+                ? `Weight: ${r.yrWeight || 0} kg`
+                : `Ends: ${r.wbEnds || 0} | Loom: ${r.wbLoom || '—'} | Remaining: ${remainingMeters} m`;
+            const metrics = r.type === 'yarn'
+                ? `${r.yrQty || 1} Rolls`
+                : `${r.wbLength || 0} m / ${remainingMeters} left`;
             const actions = canManage ? `
                 <div style="display:flex; gap:6px;">
                     <button class="btn btn-outline btn-sm action-edit-inward" data-id="${r.id}">✏️ Edit</button>
