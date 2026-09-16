@@ -100,7 +100,7 @@ function renderReadyItemsSelector() {
           if (isSelected) selectedRollIds.add(id);
           return `
             <label class="challan-item-card ${isSelected ? 'selected' : ''}">
-              <input type="checkbox" value="${id}" onchange="toggleRollSelection('${id}')" ${isSelected ? 'checked' : ''}>
+              <span class="challan-item-select"><input type="checkbox" value="${id}" onchange="toggleRollSelection('${id}')" ${isSelected ? 'checked' : ''}> Select</span>
               <div class="challan-item-header">
                 <div class="challan-item-badge">${roll.quality || 'Standard'}</div>
                 <span class="challan-item-number">${roll.rollNo || `Roll #${idx + 1}`}</span>

@@ -2,6 +2,7 @@ import { sendRequest, showToast } from '../api.js';
 import { isSuperAdmin } from '../auth.js';
 
 let cachedSpares = [];
+let spareDatePage = 0;
 
 export function setupSpareHandlers() {
   // Set default dates
@@ -77,8 +78,12 @@ export function setupSpareHandlers() {
   });
 
   // Filter Event Listeners
-  document.getElementById('spare-search')?.addEventListener('input', () => renderInventoryTable(cachedSpares));
   document.getElementById('issue-search')?.addEventListener('input', () => renderIssuanceAndSummary(cachedSpares));
+  window.filterSpares = () => {
+    spareDatePage = 0;
+    renderInventoryTable(cachedSpares);
+    renderIssuanceAndSummary(cachedSpares);
+  };
 
   // Global Scope Attachments for Table Action Buttons
   window.deleteSpareItem = async (id) => {
@@ -125,19 +130,23 @@ function populatePartSelect(spares) {
 function renderInventoryTable(spares) {
   const tbody = document.getElementById('spare-body');
   const query = document.getElementById('spare-search')?.value.toLowerCase() || '';
+  const selectedDate = document.getElementById('spare-filter-date')?.value || '';
+  const showAllDates = document.getElementById('spare-show-all-dates')?.checked || false;
+  const dates = [...new Set(spares.map(s => getDateKey(s.dateAdded)).filter(Boolean))].sort((a, b) => b.localeCompare(a));
+  spareDatePage = Math.min(spareDatePage, Math.max(dates.length - 1, 0));
+  const activeDate = showAllDates ? '' : selectedDate || dates[spareDatePage];
 
   const canManage = isSuperAdmin();
   const filtered = spares.filter(s =>
-    s.name.toLowerCase().includes(query) ||
-    (s.supplier && s.supplier.toLowerCase().includes(query))
+    (!activeDate || getDateKey(s.dateAdded) === activeDate) &&
+    (s.name.toLowerCase().includes(query) ||
+      (s.supplier && s.supplier.toLowerCase().includes(query)))
   );
 
   if (filtered.length === 0) {
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#94a3b8; padding:22px;">No matching spare parts found</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = filtered.map(s => {
+  } else {
+    tbody.innerHTML = filtered.map(s => {
     const totalIssued = s.issuances ? s.issuances.reduce((acc, i) => acc + i.qtyIssued, 0) : 0;
     const isLow = s.quantity <= s.minStock;
     const statusBadge = isLow
@@ -149,6 +158,7 @@ function renderInventoryTable(spares) {
     return `
       <tr style="border-bottom:1px solid #f1f5f9;">
         <td style="padding:10px;"><strong>${s.name}</strong></td>
+        <td style="padding:10px;">${s.dateAdded ? new Date(s.dateAdded).toLocaleDateString('en-IN') : '—'}</td>
         <td style="padding:10px;"><strong>${s.quantity}</strong></td>
         <td style="padding:10px;">${totalIssued}</td>
         <td style="padding:10px;">${s.unit}</td>
@@ -157,13 +167,34 @@ function renderInventoryTable(spares) {
         ${deleteCell}
       </tr>
     `;
-  }).join('');
+    }).join('');
+  }
+
+  const dateLabel = activeDate ? new Date(`${activeDate}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'No dates';
+  const pagination = document.getElementById('spare-pagination');
+  if (pagination) {
+    pagination.innerHTML = `
+      <button class="btn btn-outline btn-sm" id="spare-prev" ${showAllDates || selectedDate || spareDatePage === 0 ? 'disabled' : ''}>Previous</button>
+      <span>${showAllDates ? 'All dates' : selectedDate ? `Date filter &middot; ${dateLabel}` : `Page ${dates.length ? spareDatePage + 1 : 0} of ${dates.length} &middot; ${dateLabel}`}</span>
+      <button class="btn btn-outline btn-sm" id="spare-next" ${showAllDates || selectedDate || spareDatePage >= dates.length - 1 ? 'disabled' : ''}>Next</button>
+    `;
+    pagination.querySelector('#spare-prev')?.addEventListener('click', () => {
+      spareDatePage -= 1;
+      renderInventoryTable(cachedSpares);
+    });
+    pagination.querySelector('#spare-next')?.addEventListener('click', () => {
+      spareDatePage += 1;
+      renderInventoryTable(cachedSpares);
+    });
+  }
 }
 
 function renderIssuanceAndSummary(spares) {
   const issueBody = document.getElementById('issue-body');
   const summaryBody = document.getElementById('machine-summary-body');
   const query = document.getElementById('issue-search')?.value.toLowerCase() || '';
+  const selectedDate = document.getElementById('issue-filter-date')?.value || '';
+  const showAllDates = document.getElementById('issue-show-all-dates')?.checked || false;
 
   let allIssues = [];
   let summaryMap = {};
@@ -186,10 +217,21 @@ function renderIssuanceAndSummary(spares) {
 
   // Filter Issues
   const filtered = allIssues.filter(i =>
-    i.machineNo.toLowerCase().includes(query) ||
-    i.partName.toLowerCase().includes(query) ||
-    (i.issuedTo && i.issuedTo.toLowerCase().includes(query))
+    (showAllDates || !selectedDate || getDateKey(i.dateIssued) === selectedDate) &&
+    (i.machineNo.toLowerCase().includes(query) ||
+      i.partName.toLowerCase().includes(query) ||
+      (i.issuedTo && i.issuedTo.toLowerCase().includes(query)))
   );
+
+  summaryMap = {};
+  filtered.forEach(i => {
+    if (!summaryMap[i.machineNo]) {
+      summaryMap[i.machineNo] = { count: 0, totalQty: 0, breakdown: {} };
+    }
+    summaryMap[i.machineNo].count += 1;
+    summaryMap[i.machineNo].totalQty += i.qtyIssued;
+    summaryMap[i.machineNo].breakdown[i.partName] = (summaryMap[i.machineNo].breakdown[i.partName] || 0) + i.qtyIssued;
+  });
 
   if (filtered.length === 0) {
     issueBody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#94a3b8; padding:22px;">No spare parts issued yet</td></tr>`;
@@ -229,6 +271,13 @@ function renderIssuanceAndSummary(spares) {
       `;
     }).join('');
   }
+}
+
+function getDateKey(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
 function clearForm(type) {
