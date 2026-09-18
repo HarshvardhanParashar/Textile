@@ -301,31 +301,11 @@ function renderIssuanceAndSummary(spares) {
 
   const machineRows = Object.entries(summaryMap).map(([machineNo, item]) => ({ machineNo, ...item }));
   machineRows.sort((a, b) => b.totalQty - a.totalQty || a.machineNo.localeCompare(b.machineNo));
-  const totalSummaryPages = Math.max(1, Math.ceil(machineRows.length / pageSize));
-  machineSummaryPage = Math.min(machineSummaryPage, totalSummaryPages - 1);
-  const summarySlice = machineRows.slice(machineSummaryPage * pageSize, machineSummaryPage * pageSize + pageSize);
 
-  const summaryPagination = document.getElementById('machine-summary-pagination');
-  if (summaryPagination) {
-    summaryPagination.innerHTML = `
-      <button class="btn btn-outline btn-sm" id="summary-prev" ${machineSummaryPage === 0 ? 'disabled' : ''}>Previous</button>
-      <span>Page ${machineSummaryPage + 1} of ${totalSummaryPages}</span>
-      <button class="btn btn-outline btn-sm" id="summary-next" ${machineSummaryPage >= totalSummaryPages - 1 ? 'disabled' : ''}>Next</button>
-    `;
-    summaryPagination.querySelector('#summary-prev')?.addEventListener('click', () => {
-      machineSummaryPage = Math.max(0, machineSummaryPage - 1);
-      renderIssuanceAndSummary(cachedSpares);
-    });
-    summaryPagination.querySelector('#summary-next')?.addEventListener('click', () => {
-      machineSummaryPage = Math.min(totalSummaryPages - 1, machineSummaryPage + 1);
-      renderIssuanceAndSummary(cachedSpares);
-    });
-  }
-
-  if (summarySlice.length === 0) {
+  if (machineRows.length === 0) {
     summaryBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding:22px;">No issuance data for the selected month/year</td></tr>`;
   } else {
-    summaryBody.innerHTML = summarySlice.map(({ machineNo, count, breakdown, totalQty }) => {
+    summaryBody.innerHTML = machineRows.map(({ machineNo, count, breakdown, totalQty }) => {
       const breakdownText = Object.entries(breakdown)
         .map(([pName, qty]) => `${pName}: <strong>${qty}</strong>`)
         .join(', ');
