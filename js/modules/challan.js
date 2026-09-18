@@ -2,6 +2,7 @@ import { sendRequest, showToast } from '../api.js';
 
 let readyRollsList = [];
 let selectedRollIds = new Set();
+let isGeneratingChallan = false;
 
 export function setupChallanHandlers() {
   // Set default date input
@@ -10,8 +11,11 @@ export function setupChallanHandlers() {
     dateInput.value = new Date().toISOString().split('T')[0];
   }
 
-  // Generate Challan Button Listener
-  document.getElementById('btn-generate-challan')?.addEventListener('click', generateChallan);
+  const generateBtn = document.getElementById('btn-generate-challan');
+  if (generateBtn && !generateBtn.dataset.challanBound) {
+    generateBtn.addEventListener('click', generateChallan);
+    generateBtn.dataset.challanBound = 'true';
+  }
 
   // Global print function attachment
   window.printChallan = printChallan;
@@ -179,6 +183,12 @@ function updateSelectedSummary() {
 }
 
 async function generateChallan() {
+  const generateBtn = document.getElementById('btn-generate-challan');
+
+  if (isGeneratingChallan) {
+    return;
+  }
+
   const partyName = document.getElementById('ch-party').value.trim();
   if (!partyName) {
     return showToast('Customer / Party Name is required', 'error');
@@ -186,6 +196,12 @@ async function generateChallan() {
 
   if (selectedRollIds.size === 0) {
     return showToast('Please select at least 1 ready item for the challan', 'error');
+  }
+
+  isGeneratingChallan = true;
+  if (generateBtn) {
+    generateBtn.disabled = true;
+    generateBtn.textContent = 'Generating...';
   }
 
   const selectedItems = readyRollsList
@@ -232,6 +248,12 @@ async function generateChallan() {
     await renderChallanPage(); // Reload list to reflect changes
   } catch (err) {
     showToast(err.message || 'Failed to generate challan', 'error');
+  } finally {
+    isGeneratingChallan = false;
+    if (generateBtn) {
+      generateBtn.disabled = false;
+      generateBtn.textContent = '📄 Generate Challan';
+    }
   }
 }
 async function loadIssuedChallans() {
