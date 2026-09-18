@@ -291,7 +291,6 @@
 // }
 
 import { sendRequest, showToast } from '../api.js';
-import { isSuperAdmin } from '../auth.js';
 
 let cachedGreyRolls = [];
 let editingRollNo = null; // Tracks whether we are adding (null) or editing (roll number string)
@@ -456,7 +455,7 @@ function renderGreyTableUI(rolls) {
     const tbody = document.getElementById('grey-body');
     if (!tbody) return;
 
-    const canManage = isSuperAdmin();
+    const canManage = true;
     const filterGrade = document.getElementById('grey-filter-grade')?.value || '';
     const filterStatus = document.getElementById('grey-filter-status')?.value || '';
     const searchVal = document.getElementById('grey-search')?.value.toLowerCase() || '';

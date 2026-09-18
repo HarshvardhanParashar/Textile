@@ -1,8 +1,9 @@
 import { sendRequest, showToast } from '../api.js';
-import { isSuperAdmin } from '../auth.js';
 
 let cachedSpares = [];
 let spareDatePage = 0;
+let issueHistoryPage = 0;
+let machineSummaryPage = 0;
 
 export function setupSpareHandlers() {
   // Set default dates
@@ -79,6 +80,16 @@ export function setupSpareHandlers() {
 
   // Filter Event Listeners
   document.getElementById('issue-search')?.addEventListener('input', () => renderIssuanceAndSummary(cachedSpares));
+  document.getElementById('issue-month-filter')?.addEventListener('change', () => {
+    issueHistoryPage = 0;
+    machineSummaryPage = 0;
+    renderIssuanceAndSummary(cachedSpares);
+  });
+  document.getElementById('issue-year-filter')?.addEventListener('change', () => {
+    issueHistoryPage = 0;
+    machineSummaryPage = 0;
+    renderIssuanceAndSummary(cachedSpares);
+  });
   window.filterSpares = () => {
     spareDatePage = 0;
     renderInventoryTable(cachedSpares);
@@ -113,10 +124,29 @@ export async function renderSparesTable() {
   try {
     cachedSpares = await sendRequest('spares');
     populatePartSelect(cachedSpares);
+    refreshIssueYearFilter();
     renderInventoryTable(cachedSpares);
     renderIssuanceAndSummary(cachedSpares);
   } catch (err) {
     showToast('Failed to load Spare Parts data', 'error');
+  }
+}
+
+function refreshIssueYearFilter() {
+  const select = document.getElementById('issue-year-filter');
+  if (!select) return;
+
+  const years = [...new Set(
+    cachedSpares.flatMap(s => (s.issuances || []).map(i => new Date(i.dateIssued).getFullYear()))
+      .filter(year => Number.isFinite(year))
+  )].sort((a, b) => b - a);
+
+  const currentValue = select.value;
+  select.innerHTML = '<option value="">All Years</option>' + years.map(year => `<option value="${year}">${year}</option>`).join('');
+  if (currentValue && years.includes(Number(currentValue))) {
+    select.value = String(currentValue);
+  } else {
+    select.value = '';
   }
 }
 
@@ -136,7 +166,7 @@ function renderInventoryTable(spares) {
   spareDatePage = Math.min(spareDatePage, Math.max(dates.length - 1, 0));
   const activeDate = showAllDates ? '' : selectedDate || dates[spareDatePage];
 
-  const canManage = isSuperAdmin();
+  const canManage = true;
   const filtered = spares.filter(s =>
     (!activeDate || getDateKey(s.dateAdded) === activeDate) &&
     (s.name.toLowerCase().includes(query) ||
@@ -193,8 +223,9 @@ function renderIssuanceAndSummary(spares) {
   const issueBody = document.getElementById('issue-body');
   const summaryBody = document.getElementById('machine-summary-body');
   const query = document.getElementById('issue-search')?.value.toLowerCase() || '';
-  const selectedDate = document.getElementById('issue-filter-date')?.value || '';
-  const showAllDates = document.getElementById('issue-show-all-dates')?.checked || false;
+  const selectedMonth = Number(document.getElementById('issue-month-filter')?.value || 0);
+  const selectedYear = Number(document.getElementById('issue-year-filter')?.value || 0);
+  const pageSize = 8;
 
   let allIssues = [];
   let summaryMap = {};
@@ -202,9 +233,21 @@ function renderIssuanceAndSummary(spares) {
   spares.forEach(s => {
     if (s.issuances) {
       s.issuances.forEach(i => {
-        allIssues.push({ ...i, partName: s.name, unit: s.unit, partId: s._id, issueId: i._id });
+        const issueDate = new Date(i.dateIssued);
+        const issueMonth = issueDate.getMonth() + 1;
+        const issueYear = issueDate.getFullYear();
 
-        // Aggregate for machine summary
+        const matchesMonth = !selectedMonth || issueMonth === selectedMonth;
+        const matchesYear = !selectedYear || issueYear === selectedYear;
+        const matchesQuery = !query ||
+          (i.machineNo && i.machineNo.toLowerCase().includes(query)) ||
+          (s.name && s.name.toLowerCase().includes(query)) ||
+          (i.issuedTo && i.issuedTo.toLowerCase().includes(query));
+
+        if (!matchesMonth || !matchesYear || !matchesQuery) return;
+
+        allIssues.push({ ...i, partName: s.name, unit: s.unit, partId: s._id, issueId: i._id, dateObj: issueDate });
+
         if (!summaryMap[i.machineNo]) {
           summaryMap[i.machineNo] = { count: 0, totalQty: 0, breakdown: {} };
         }
@@ -215,28 +258,32 @@ function renderIssuanceAndSummary(spares) {
     }
   });
 
-  // Filter Issues
-  const filtered = allIssues.filter(i =>
-    (showAllDates || !selectedDate || getDateKey(i.dateIssued) === selectedDate) &&
-    (i.machineNo.toLowerCase().includes(query) ||
-      i.partName.toLowerCase().includes(query) ||
-      (i.issuedTo && i.issuedTo.toLowerCase().includes(query)))
-  );
+  allIssues.sort((a, b) => new Date(b.dateIssued) - new Date(a.dateIssued));
+  const totalIssuePages = Math.max(1, Math.ceil(allIssues.length / pageSize));
+  issueHistoryPage = Math.min(issueHistoryPage, totalIssuePages - 1);
+  const issueSlice = allIssues.slice(issueHistoryPage * pageSize, issueHistoryPage * pageSize + pageSize);
 
-  summaryMap = {};
-  filtered.forEach(i => {
-    if (!summaryMap[i.machineNo]) {
-      summaryMap[i.machineNo] = { count: 0, totalQty: 0, breakdown: {} };
-    }
-    summaryMap[i.machineNo].count += 1;
-    summaryMap[i.machineNo].totalQty += i.qtyIssued;
-    summaryMap[i.machineNo].breakdown[i.partName] = (summaryMap[i.machineNo].breakdown[i.partName] || 0) + i.qtyIssued;
-  });
+  const issuePagination = document.getElementById('issue-pagination');
+  if (issuePagination) {
+    issuePagination.innerHTML = `
+      <button class="btn btn-outline btn-sm" id="issue-prev" ${issueHistoryPage === 0 ? 'disabled' : ''}>Previous</button>
+      <span>Page ${issueHistoryPage + 1} of ${totalIssuePages}</span>
+      <button class="btn btn-outline btn-sm" id="issue-next" ${issueHistoryPage >= totalIssuePages - 1 ? 'disabled' : ''}>Next</button>
+    `;
+    issuePagination.querySelector('#issue-prev')?.addEventListener('click', () => {
+      issueHistoryPage = Math.max(0, issueHistoryPage - 1);
+      renderIssuanceAndSummary(cachedSpares);
+    });
+    issuePagination.querySelector('#issue-next')?.addEventListener('click', () => {
+      issueHistoryPage = Math.min(totalIssuePages - 1, issueHistoryPage + 1);
+      renderIssuanceAndSummary(cachedSpares);
+    });
+  }
 
-  if (filtered.length === 0) {
-    issueBody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#94a3b8; padding:22px;">No spare parts issued yet</td></tr>`;
+  if (issueSlice.length === 0) {
+    issueBody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#94a3b8; padding:22px;">No spare parts issued for the selected month/year</td></tr>`;
   } else {
-    issueBody.innerHTML = filtered.map(i => `
+    issueBody.innerHTML = issueSlice.map(i => `
       <tr style="border-bottom:1px solid #f1f5f9;">
         <td style="padding:10px;">${new Date(i.dateIssued).toLocaleDateString('en-IN')}</td>
         <td style="padding:10px;"><strong>${i.partName}</strong></td>
@@ -252,21 +299,43 @@ function renderIssuanceAndSummary(spares) {
     `).join('');
   }
 
-  // Render Summary Table
-  const machines = Object.keys(summaryMap);
-  if (machines.length === 0) {
-    summaryBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding:22px;">No issuance data yet</td></tr>`;
+  const machineRows = Object.entries(summaryMap).map(([machineNo, item]) => ({ machineNo, ...item }));
+  machineRows.sort((a, b) => b.totalQty - a.totalQty || a.machineNo.localeCompare(b.machineNo));
+  const totalSummaryPages = Math.max(1, Math.ceil(machineRows.length / pageSize));
+  machineSummaryPage = Math.min(machineSummaryPage, totalSummaryPages - 1);
+  const summarySlice = machineRows.slice(machineSummaryPage * pageSize, machineSummaryPage * pageSize + pageSize);
+
+  const summaryPagination = document.getElementById('machine-summary-pagination');
+  if (summaryPagination) {
+    summaryPagination.innerHTML = `
+      <button class="btn btn-outline btn-sm" id="summary-prev" ${machineSummaryPage === 0 ? 'disabled' : ''}>Previous</button>
+      <span>Page ${machineSummaryPage + 1} of ${totalSummaryPages}</span>
+      <button class="btn btn-outline btn-sm" id="summary-next" ${machineSummaryPage >= totalSummaryPages - 1 ? 'disabled' : ''}>Next</button>
+    `;
+    summaryPagination.querySelector('#summary-prev')?.addEventListener('click', () => {
+      machineSummaryPage = Math.max(0, machineSummaryPage - 1);
+      renderIssuanceAndSummary(cachedSpares);
+    });
+    summaryPagination.querySelector('#summary-next')?.addEventListener('click', () => {
+      machineSummaryPage = Math.min(totalSummaryPages - 1, machineSummaryPage + 1);
+      renderIssuanceAndSummary(cachedSpares);
+    });
+  }
+
+  if (summarySlice.length === 0) {
+    summaryBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding:22px;">No issuance data for the selected month/year</td></tr>`;
   } else {
-    summaryBody.innerHTML = machines.map(mNo => {
-      const item = summaryMap[mNo];
-      const breakdownText = Object.entries(item.breakdown).map(([pName, qty]) => `${pName}: <strong>${qty}</strong>`).join(', ');
+    summaryBody.innerHTML = summarySlice.map(({ machineNo, count, breakdown, totalQty }) => {
+      const breakdownText = Object.entries(breakdown)
+        .map(([pName, qty]) => `${pName}: <strong>${qty}</strong>`)
+        .join(', ');
 
       return `
         <tr style="border-bottom:1px solid #f1f5f9;">
-          <td style="padding:10px;"><strong>${mNo}</strong></td>
-          <td style="padding:10px;">${item.count} times</td>
-          <td style="padding:10px;">${breakdownText}</td>
-          <td style="padding:10px;"><strong>${item.totalQty}</strong></td>
+          <td style="padding:10px;"><strong>${machineNo}</strong></td>
+          <td style="padding:10px;">${count} times</td>
+          <td style="padding:10px;">${breakdownText || '—'}</td>
+          <td style="padding:10px;"><strong>${totalQty}</strong></td>
         </tr>
       `;
     }).join('');

@@ -1,5 +1,4 @@
 import { sendRequest, showToast } from '../api.js';
-import { isSuperAdmin } from '../auth.js';
 
 let activeType = 'yarn';
 let editingId = null;
@@ -202,7 +201,7 @@ function renderInwardTableUI(records) {
     const tbody = document.getElementById('inwardTableBody');
     if (!tbody) return;
 
-    const canManage = isSuperAdmin();
+    const canManage = true;
     const filterType = document.getElementById('inward-filter-type')?.value || '';
     const searchValue = document.getElementById('inward-search')?.value.trim().toLowerCase() || '';
     const selectedDate = document.getElementById('inward-filter-date')?.value || '';
