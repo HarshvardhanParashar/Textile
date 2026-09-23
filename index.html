@@ -669,48 +669,60 @@
   </div>
 
   <!-- 2. ISSUE SPARE PART TO MACHINE CARD -->
-  <div class="card" style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:20px; margin-bottom:20px;">
-    <div style="font-size:16px; font-weight:700; border-bottom:1px solid #f1f5f9; padding-bottom:10px; margin-bottom:12px;">
-      🏭 Issue Spare Part to Machine
+  <div class="card" style="background:linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border:1px solid #e2e8f0; border-radius:12px; padding:22px; margin-bottom:20px; box-shadow:0 10px 24px rgba(15,23,42,0.04);">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; border-bottom:1px solid #e2e8f0; padding-bottom:12px; margin-bottom:16px; flex-wrap:wrap;">
+      <div style="font-size:18px; font-weight:800; color:#0f172a; letter-spacing:-0.02em;">
+        🏭 Issue Spare Part to Machine
+      </div>
+      <span style="background:#ecfeff; color:#0f766e; border:1px solid #a5f3fc; border-radius:999px; padding:5px 10px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">
+        Live stock tracking
+      </span>
     </div>
-    <div style="background:#fffbe0; border:1px solid #fef08a; padding:10px 14px; border-radius:6px; font-size:12px; color:#854d0e; margin-bottom:14px;">
-      Record every time a spare part is taken out of stock and given to a specific machine — this keeps an exact trail of how much has gone to which machine number.
+    <div style="background:linear-gradient(90deg, #fff7ed 0%, #fef9c3 100%); border:1px solid #fed7aa; padding:12px 14px; border-radius:10px; font-size:12px; color:#9a5b00; margin-bottom:16px; line-height:1.5;">
+      Record every time a spare part is taken out of stock and given to a machine. This keeps a clean and accurate trail of what has been used and where.
     </div>
-    <div class="issue-form-grid" style="margin-bottom:14px;">
-      <div style="display:flex; flex-direction:column; gap:4px;">
-        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">SELECT SPARE PART *</label>
-        <select id="is-part" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+    <div class="issue-form-grid" style="margin-bottom:18px; display:grid; grid-template-columns:repeat(3, minmax(180px, 1fr)); gap:16px; align-items:start;">
+      <div style="display:flex; flex-direction:column; gap:6px; grid-column:span 1;">
+        <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.04em;">Select Spare Part *</label>
+        <div style="position:relative;">
+          <input type="text" id="is-part-search" placeholder="Search spare part..." autocomplete="off" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; background:#fff; box-shadow:inset 0 1px 2px rgba(15,23,42,0.03); transition:all 0.2s ease;">
+          <div id="is-part-dropdown" style="display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; background:#fff; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 10px 24px rgba(15,23,42,0.12); max-height:220px; overflow:auto; z-index:50;">
+          </div>
+        </div>
+        <select id="is-part" style="display:none;">
           <option value="">-- Select Part --</option>
         </select>
       </div>
-      <div style="display:flex; flex-direction:column; gap:4px;">
-        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">MACHINE NO / ID *</label>
-        <input type="text" id="is-machineno" placeholder="e.g. Loom-3, Mussiness-1" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.04em;">Machine No / ID *</label>
+        <input type="text" id="is-machineno" placeholder="e.g. Loom-3, M-12" style="padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; background:#fff;">
       </div>
-      <div style="display:flex; flex-direction:column; gap:4px;">
-        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">QUANTITY TO ISSUE *</label>
-        <input type="number" id="is-qty" placeholder="e.g. 2" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.04em;">Quantity to Issue *</label>
+        <input type="number" id="is-qty" placeholder="e.g. 2" style="padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; background:#fff;">
       </div>
-      <div style="display:flex; flex-direction:column; gap:4px;">
-        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">AVAILABLE STOCK</label>
-        <input type="text" id="is-available" readonly placeholder="—" style="padding:8px 10px; border:1px solid #e2e8f0; background:#f8fafc; font-weight:700; border-radius:6px; font-size:13px;">
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.04em;">Available Stock</label>
+        <input type="text" id="is-available" readonly placeholder="—" style="padding:10px 12px; border:1px solid #e2e8f0; background:#f8fafc; font-weight:700; border-radius:8px; font-size:13px; color:#0f172a;">
       </div>
-      <div style="display:flex; flex-direction:column; gap:4px;">
-        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">DATE ISSUED</label>
-        <input type="date" id="is-date" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.04em;">Date Issued</label>
+        <input type="date" id="is-date" style="padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; background:#fff;">
       </div>
-      <div style="display:flex; flex-direction:column; gap:4px;">
-        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">ISSUED TO (PERSON)</label>
-        <input type="text" id="is-person" placeholder="Operator / fitter name" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.04em;">Issued To (Person)</label>
+        <input type="text" id="is-person" placeholder="Operator / fitter name" style="padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; background:#fff;">
       </div>
-      <div style="grid-column: span 3; display:flex; flex-direction:column; gap:4px;">
-        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">REASON / REMARKS</label>
-        <input type="text" id="is-remarks" placeholder="e.g. Routine replacement, breakdown" style="padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; outline:none;">
+      <div style="grid-column:span 3; display:flex; flex-direction:column; gap:6px;">
+        <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase; letter-spacing:0.04em;">Reason / Remarks</label>
+        <input type="text" id="is-remarks" placeholder="e.g. Routine replacement, breakdown" style="padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; outline:none; background:#fff;">
       </div>
     </div>
-    <button class="btn btn-grey" id="btn-issue-spare" style="background:#334155; color:#fff; border:none; padding:8px 16px; border-radius:6px; font-weight:600; font-size:13px; cursor:pointer;">
-      🏭 Issue to Machine
-    </button>
+    <div style="display:flex; justify-content:flex-end;">
+      <button class="btn btn-grey" id="btn-issue-spare" style="background:linear-gradient(135deg, #334155 0%, #475569 100%); color:#fff; border:none; padding:10px 18px; border-radius:8px; font-weight:700; font-size:13px; cursor:pointer; box-shadow:0 8px 18px rgba(51,65,85,0.18); transition:transform 0.18s ease, box-shadow 0.18s ease;">
+        🏭 Issue to Machine
+      </button>
+    </div>
   </div>
 
   <!-- 3. INVENTORY TABLE -->

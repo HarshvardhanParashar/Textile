@@ -27,7 +27,7 @@ Challan.collection.dropIndex('no_1').catch(() => {
 router.get('/ready-rolls', async (req, res) => {
   try {
     const outletFilter = getOutletFilter(req);
-    const rolls = await GreyRoll.find({ status: { $ne: 'Dispatched' }, ...outletFilter });
+    const rolls = await GreyRoll.find({ status: { $nin: ['Dispatched', 'Sold'] }, ...outletFilter });
     res.json(rolls);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -97,14 +97,17 @@ router.post('/', async (req, res) => {
 
     await challan.save({ session });
 
-    //  REMOVE / DELETE SELECTED ROLLS FROM INVENTORY
+    // Mark selected grey rolls as sold instead of deleting them from stock history.
+    // Deleting them restores the original beam stock because the app calculates available
+    // quantity from the remaining grey-roll records.
     const rollIds = normalizedItems.map(item => item._id || item.id).filter(Boolean);
 
     if (rollIds.length > 0) {
-      // 1. Delete or mark as Dispatched in GreyRoll collection
-      await GreyRoll.deleteMany({ _id: { $in: rollIds } }).session(session);
+      await GreyRoll.updateMany(
+        { _id: { $in: rollIds } },
+        { $set: { status: 'Sold' } }
+      ).session(session);
 
-      // 2. If you also use ReadyToSell stock, delete from there too
       if (ReadyToSell) {
         await ReadyToSell.deleteMany({ _id: { $in: rollIds } }).session(session);
       }

@@ -28,6 +28,17 @@ const getBeamRecord = async (beamValue, outletId = '') => {
     }) || null;
 };
 
+const getGreyRollQuery = (identifier, outletFilter = {}) => {
+    const value = String(identifier ?? '').trim();
+    if (!value) return { ...outletFilter };
+
+    if (mongoose.Types.ObjectId.isValid(value)) {
+        return { _id: new mongoose.Types.ObjectId(value), ...outletFilter };
+    }
+
+    return { no: value, ...outletFilter };
+};
+
 const calculateBeamUsage = async (beamRecord) => {
     const totalMeters = Number(beamRecord.wbLength || 0) || 0;
     const usedResult = await GreyRoll.aggregate([
@@ -91,7 +102,8 @@ router.post('/', async (req, res) => {
 router.put('/:no', async (req, res) => {
     try {
         const outletFilter = getOutletFilter(req);
-        const currentRoll = await GreyRoll.findOne({ no: req.params.no, ...outletFilter });
+        const rollQuery = getGreyRollQuery(req.params.no, outletFilter);
+        const currentRoll = await GreyRoll.findOne(rollQuery);
         if (!currentRoll) return res.status(404).json({ error: 'Roll not found.' });
 
         const previousBeam = currentRoll.beam;
@@ -120,7 +132,7 @@ router.put('/:no', async (req, res) => {
         const payload = { ...req.body };
         if (!payload.outletId && outletFilter.outletId) payload.outletId = outletFilter.outletId;
         const updated = await GreyRoll.findOneAndUpdate(
-            { no: req.params.no, ...outletFilter },
+            rollQuery,
             payload,
             { returnDocument: 'after', runValidators: true }
         );
@@ -136,8 +148,9 @@ router.put('/:no', async (req, res) => {
 router.delete('/:no', async (req, res) => {
     try {
         const outletFilter = getOutletFilter(req);
-        const roll = await GreyRoll.findOne({ no: req.params.no, ...outletFilter });
-        await GreyRoll.findOneAndDelete({ no: req.params.no, ...outletFilter });
+        const rollQuery = getGreyRollQuery(req.params.no, outletFilter);
+        const roll = await GreyRoll.findOne(rollQuery);
+        await GreyRoll.findOneAndDelete(rollQuery);
         res.json({ message: 'Grey Roll deleted successfully.' });
     } catch (err) {
         res.status(500).json({ error: err.message });

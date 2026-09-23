@@ -235,11 +235,9 @@ async function generateChallan() {
       selectedItems.map(item => {
         if (item.source === 'readytosell') {
           return sendRequest(`readytosell/${item._id}`, 'DELETE');
-        } else {
-          // Soft-delete by setting status to 'Dispatched', or call DELETE endpoint
-          return sendRequest(`greyrolls/${item._id}`, 'PUT', { status: 'Dispatched' })
-            .catch(() => sendRequest(`greyrolls/${item._id}`, 'DELETE'));
         }
+
+        return sendRequest(`greyrolls/${item._id}`, 'PUT', { status: 'Sold' });
       })
     );
 

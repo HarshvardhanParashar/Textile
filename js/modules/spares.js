@@ -70,12 +70,108 @@ export function setupSpareHandlers() {
     }
   });
 
-  // Dropdown Change Listener to Display Available Stock
-  document.getElementById('is-part')?.addEventListener('change', (e) => {
-    const partId = e.target.value;
-    const availInput = document.getElementById('is-available');
+  const partSearchInput = document.getElementById('is-part-search');
+  const partSelect = document.getElementById('is-part');
+  const partDropdown = document.getElementById('is-part-dropdown');
+
+  const updateSelectedPart = (partId) => {
     const selected = cachedSpares.find(s => s._id === partId);
-    availInput.value = selected ? `${selected.quantity} ${selected.unit}` : '—';
+    const availInput = document.getElementById('is-available');
+
+    if (partSelect) partSelect.value = partId || '';
+    if (selected) {
+      if (partSearchInput) partSearchInput.value = `${selected.name} (${selected.code || 'No Code'})`;
+      if (availInput) availInput.value = `${selected.quantity} ${selected.unit}`;
+    } else {
+      if (partSearchInput) partSearchInput.value = '';
+      if (availInput) availInput.value = '—';
+    }
+  };
+
+  const renderPartSuggestions = (query = '') => {
+    if (!partDropdown || !cachedSpares.length) {
+      partDropdown.style.display = 'none';
+      return;
+    }
+
+    const normalizedQuery = String(query || '').trim().toLowerCase();
+    const matches = cachedSpares.filter(item => {
+      const haystack = `${item.name || ''} ${item.code || ''} ${item.unit || ''}`.toLowerCase();
+      return !normalizedQuery || haystack.includes(normalizedQuery);
+    }).slice(0, 10);
+
+    if (!matches.length) {
+      partDropdown.innerHTML = '<div style="padding:10px 12px; font-size:12px; color:#64748b;">No matching part found</div>';
+      partDropdown.style.display = 'block';
+      return;
+    }
+
+    partDropdown.innerHTML = matches.map(item => `
+      <div class="part-search-option" data-part-id="${item._id}" style="padding:10px 12px; border-bottom:1px solid #f1f5f9; cursor:pointer; font-size:13px; color:#0f172a; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <span style="font-weight:600;">${item.name}</span>
+        <span style="color:#64748b; font-size:11px;">${item.quantity} ${item.unit}</span>
+      </div>
+    `).join('');
+
+    partDropdown.querySelectorAll('.part-search-option').forEach(option => {
+      option.addEventListener('click', () => {
+        updateSelectedPart(option.dataset.partId);
+        partDropdown.style.display = 'none';
+      });
+    });
+
+    partDropdown.style.display = 'block';
+  };
+
+  partSearchInput?.addEventListener('input', (e) => {
+    const value = e.target.value || '';
+    const searchableValue = value.trim();
+
+    if (!searchableValue) {
+      if (partDropdown) {
+        renderPartSuggestions('');
+      }
+      updateSelectedPart('');
+      return;
+    }
+
+    renderPartSuggestions(searchableValue);
+
+    const directMatch = cachedSpares.find(item => {
+      const label = `${item.name} ${item.code || ''}`.toLowerCase();
+      return label.includes(searchableValue.toLowerCase());
+    });
+
+    if (!directMatch) {
+      if (partSelect) partSelect.value = '';
+      document.getElementById('is-available').value = '—';
+    }
+  });
+
+  partSearchInput?.addEventListener('focus', () => {
+    renderPartSuggestions(partSearchInput.value || '');
+  });
+
+  document.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!target) return;
+    const clickedInside = partSearchInput?.contains(target) || partDropdown?.contains(target);
+    if (!clickedInside && partDropdown) {
+      partDropdown.style.display = 'none';
+    }
+  });
+
+  // Dropdown Change Listener to Display Available Stock
+  partSelect?.addEventListener('change', (e) => {
+    const partId = e.target.value;
+    const selected = cachedSpares.find(s => s._id === partId);
+    if (selected) {
+      if (partSearchInput) partSearchInput.value = `${selected.name} (${selected.code || 'No Code'})`;
+      const availInput = document.getElementById('is-available');
+      if (availInput) availInput.value = `${selected.quantity} ${selected.unit}`;
+    } else {
+      document.getElementById('is-available').value = '—';
+    }
   });
 
   // Filter Event Listeners
@@ -152,9 +248,34 @@ function refreshIssueYearFilter() {
 
 function populatePartSelect(spares) {
   const select = document.getElementById('is-part');
+  const searchInput = document.getElementById('is-part-search');
+  const dropdown = document.getElementById('is-part-dropdown');
   if (!select) return;
+
+  const originalValue = select.value;
   select.innerHTML = '<option value="">-- Select Part --</option>' +
     spares.map(s => `<option value="${s._id}">${s.name} (${s.code || 'No Code'}) - Stock: ${s.quantity}</option>`).join('');
+
+  if (searchInput) {
+    searchInput.value = '';
+  }
+
+  if (dropdown) {
+    dropdown.innerHTML = '';
+    dropdown.style.display = 'none';
+  }
+
+  if (originalValue && spares.some(s => s._id === originalValue)) {
+    select.value = originalValue;
+    const selected = spares.find(s => s._id === originalValue);
+    if (selected && searchInput) {
+      searchInput.value = `${selected.name} (${selected.code || 'No Code'})`;
+    }
+  } else {
+    select.value = '';
+    const availInput = document.getElementById('is-available');
+    if (availInput) availInput.value = '—';
+  }
 }
 
 function renderInventoryTable(spares) {
