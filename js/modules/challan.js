@@ -52,7 +52,7 @@ async function loadReadyItems() {
 
     const readyGreyRolls = Array.isArray(greyRollResponse)
       ? greyRollResponse
-          .filter(roll => (roll.status || '').toLowerCase() === 'ready')
+          .filter(roll => roll.quality !== 'Defective' && (roll.status || '').toLowerCase() === 'ready')
           .map(roll => ({
             ...roll,
             id: roll._id,

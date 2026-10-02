@@ -26,7 +26,15 @@ const InwardSchema = new mongoose.Schema({
     wbLoom: { type: String },
     construction: { type: String, default: '' },
     usedMeters: { type: Number, default: 0 },
-    remainingMeters: { type: Number, default: 0 }
+    remainingMeters: { type: Number, default: 0 },
+    finishHistory: [{
+        loom: { type: String, default: '' },
+        date: { type: Date, default: Date.now },
+        construction: { type: String, default: '' },
+        beamLength: { type: Number, default: 0 },
+        producedMeters: { type: Number, default: 0 },
+        wastageMeters: { type: Number, default: 0 }
+    }]
 }, { timestamps: true });
 
 export default mongoose.model('Inward', InwardSchema);

@@ -304,6 +304,20 @@
     </form>
   </div>
 
+  <div class="card loom-board-card" id="loomBoardCard">
+    <div class="card-header">
+      <span class="card-title">Loom Slots</span>
+      <button type="button" class="btn btn-outline btn-sm hidden" id="addLoomSlotsBtn">+ Add slots</button>
+      <form id="loomRangeForm" class="loom-range-form hidden">
+        <label>From <input type="number" id="loom-range-start" min="0" required></label>
+        <label>To <input type="number" id="loom-range-end" min="0" required></label>
+        <button type="submit" class="btn btn-primary btn-sm">Save slots</button>
+      </form>
+    </div>
+    <div id="loomSlots" class="loom-slots" aria-live="polite"></div>
+    <section id="loomDetails" class="loom-details hidden" aria-live="polite"></section>
+  </div>
+
   <div class="card">
     <div class="card-header">
       <span class="card-title">All Inward Stock</span>
@@ -397,7 +411,6 @@
         <select id="grey-filter-grade" onchange="filterGrey()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none">
           <option value="">All Grades</option>
           <option value="Sell">Sell</option>
-          <option value="Defective">Defective</option>
         </select>
         <select id="grey-filter-status" onchange="filterGrey()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none">
           <option value="">All Status</option>
@@ -425,6 +438,40 @@
       </table>
     </div>
     <div class="stock-pagination" id="grey-pagination"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Wastage Stock</span>
+      <div class="filter-row">
+        <select id="wastage-filter-grade" onchange="filterWastage()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none">
+          <option value="">All Grades</option>
+          <option value="Defective">Defective</option>
+          <option value="Wastage">Loom Wastage</option>
+        </select>
+        <select id="wastage-filter-status" onchange="filterWastage()" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none">
+          <option value="">All Status</option>
+          <option value="Wastage">Wastage</option>
+        </select>
+        <input type="date" id="wastage-filter-date" onchange="filterWastage()" title="Filter by date" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none">
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);white-space:nowrap"><input type="checkbox" id="wastage-show-all-dates" onchange="filterWastage()"> All dates</label>
+        <input type="text" placeholder="Search roll, beam or loom..." id="wastage-search" oninput="filterWastage()" style="padding:7px 11px;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none;width:180px">
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Grey Roll No</th><th>Date</th><th>Beam Used</th><th>Loom</th>
+            <th>Construction</th><th>Width</th><th>Meters</th><th>Quality</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="wastage-body">
+          <tr><td colspan="9" style="text-align:center;color:var(--muted);padding:18px">No wastage recorded.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="stock-pagination" id="wastage-pagination"></div>
   </div>
 
   <!-- 📈 SUMMARY METRICS GRID -->

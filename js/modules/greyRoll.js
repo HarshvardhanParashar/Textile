@@ -293,8 +293,10 @@
 import { sendRequest, showToast } from '../api.js';
 
 let cachedGreyRolls = [];
+let cachedLoomWastage = [];
 let editingRollNo = null; // Tracks whether we are adding (null) or editing (roll number string)
 let greyDatePage = 0;
+let wastageDatePage = 0;
 
 export function setupGreyHandlers() {
     // Visibility toggles for "Other" dropdown options
@@ -439,15 +441,121 @@ export function setupGreyHandlers() {
         greyDatePage = 0;
         renderGreyTableUI(cachedGreyRolls);
     };
+
+    window.filterWastage = () => {
+        wastageDatePage = 0;
+        renderWastageTableUI();
+    };
 }
 
 export async function renderGreyTable() {
     try {
-        cachedGreyRolls = await sendRequest('greyrolls') || [];
+        [cachedGreyRolls, cachedLoomWastage] = await Promise.all([
+            sendRequest('greyrolls'),
+            sendRequest('inward/wastage').catch(() => null)
+        ]);
         renderGreyTableUI(cachedGreyRolls);
+        renderWastageTableUI();
     } catch (err) {
         const tbody = document.getElementById('grey-body');
         if (tbody) tbody.innerHTML = '<tr><td colspan="11" style="color:red;text-align:center;">Failed to sync stock list.</td></tr>';
+    }
+}
+
+function renderWastageTableUI() {
+    const tbody = document.getElementById('wastage-body');
+    if (!tbody) return;
+    if (!Array.isArray(cachedLoomWastage)) {
+        cachedLoomWastage = [];
+    }
+
+    const defectiveRolls = cachedGreyRolls
+        .filter(roll => roll.quality === 'Defective')
+        .map(roll => ({ ...roll, wastageType: 'defective', status: 'Wastage' }));
+    const loomWastage = cachedLoomWastage.map(record => ({
+        no: `WST-${record.id}`,
+        date: record.date,
+        beam: record.beam,
+        loom: record.loom,
+        construction: record.construction || '',
+        width: 0,
+        meters: Number(record.wastageMeters || 0),
+        weight: 0,
+        quality: 'Wastage',
+        status: 'Wastage',
+        wastageType: 'loom'
+    }));
+    const records = [...defectiveRolls, ...loomWastage];
+    const filterGrade = document.getElementById('wastage-filter-grade')?.value || '';
+    const filterStatus = document.getElementById('wastage-filter-status')?.value || '';
+    const searchValue = document.getElementById('wastage-search')?.value.trim().toLowerCase() || '';
+    const selectedDate = document.getElementById('wastage-filter-date')?.value || '';
+    const showAllDates = document.getElementById('wastage-show-all-dates')?.checked || false;
+    const dates = [...new Set(records.map(getRollDate).filter(Boolean))].sort((a, b) => b.localeCompare(a));
+    wastageDatePage = Math.min(wastageDatePage, Math.max(dates.length - 1, 0));
+    const activeDate = showAllDates ? '' : selectedDate || dates[wastageDatePage];
+    const filtered = records.filter(record => {
+        const matchesGrade = !filterGrade || record.quality === filterGrade;
+        const matchesStatus = !filterStatus || record.status === filterStatus;
+        const searchable = [record.no, record.beam, record.loom, record.construction]
+            .some(value => String(value || '').toLowerCase().includes(searchValue));
+        return matchesGrade && matchesStatus && (!searchValue || searchable) && (!activeDate || getRollDate(record) === activeDate);
+    });
+
+    if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:22px">No matching wastage records.</td></tr>';
+    } else {
+        tbody.replaceChildren(...filtered.map(record => {
+        const row = document.createElement('tr');
+        const recordDate = getRollDate(record);
+        const dateValue = recordDate ? new Date(`${recordDate}T00:00:00`) : null;
+        const date = dateValue && !Number.isNaN(dateValue.getTime()) ? dateValue.toLocaleDateString('en-IN') : '—';
+        const values = [record.no, date, record.beam, record.loom, record.construction,
+            record.width ? `${record.width}"` : '—', `${Number(record.meters || 0)} m`];
+        values.forEach((value, index) => {
+            const cell = document.createElement('td');
+            if (index === 0) {
+                const strong = document.createElement('strong');
+                strong.style.fontFamily = 'var(--mono)';
+                strong.textContent = value || '—';
+                cell.appendChild(strong);
+            } else {
+                cell.textContent = value || '—';
+            }
+            row.appendChild(cell);
+        });
+        const qualityCell = document.createElement('td');
+        const qualityBadge = document.createElement('span');
+        qualityBadge.className = `q-badge q-${record.quality}`;
+        qualityBadge.textContent = record.quality;
+        qualityCell.appendChild(qualityBadge);
+        row.appendChild(qualityCell);
+        const statusCell = document.createElement('td');
+        const statusBadge = document.createElement('span');
+        statusBadge.className = 'status-badge s-in';
+        statusBadge.textContent = 'Wastage';
+        statusCell.appendChild(statusBadge);
+        row.appendChild(statusCell);
+        return row;
+        }));
+    }
+
+    const dateLabel = activeDate ? new Date(`${activeDate}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'No dates';
+    const pagination = document.getElementById('wastage-pagination');
+    if (pagination) {
+        pagination.innerHTML = `
+            <button class="btn btn-outline btn-sm" id="wastage-prev" ${showAllDates || selectedDate || wastageDatePage === 0 ? 'disabled' : ''}>Previous</button>
+            <span>${showAllDates ? 'All dates' : selectedDate ? `Date filter &middot; ${dateLabel}` : `Page ${dates.length ? wastageDatePage + 1 : 0} of ${dates.length} &middot; ${dateLabel}`}</span>
+            <button class="btn btn-outline btn-sm" id="wastage-next" ${showAllDates || selectedDate || wastageDatePage >= dates.length - 1 ? 'disabled' : ''}>Next</button>
+        `;
+        pagination.querySelector('#wastage-prev')?.addEventListener('click', () => {
+            wastageDatePage -= 1;
+            renderWastageTableUI();
+        });
+        pagination.querySelector('#wastage-next')?.addEventListener('click', () => {
+            wastageDatePage += 1;
+            renderWastageTableUI();
+        });
     }
 }
 
@@ -461,11 +569,12 @@ function renderGreyTableUI(rolls) {
     const searchVal = document.getElementById('grey-search')?.value.toLowerCase() || '';
     const selectedDate = document.getElementById('grey-filter-date')?.value || '';
     const showAllDates = document.getElementById('grey-show-all-dates')?.checked || false;
-    const dates = [...new Set(rolls.map(getRollDate).filter(Boolean))].sort((a, b) => b.localeCompare(a));
+    const stockRolls = rolls.filter(roll => roll.quality !== 'Defective');
+    const dates = [...new Set(stockRolls.map(getRollDate).filter(Boolean))].sort((a, b) => b.localeCompare(a));
     greyDatePage = Math.min(greyDatePage, Math.max(dates.length - 1, 0));
     const activeDate = showAllDates ? '' : selectedDate || dates[greyDatePage];
 
-    let filtered = rolls.filter(r => {
+    let filtered = stockRolls.filter(r => {
         const matchGrade = !filterGrade || r.quality === filterGrade;
         const matchStatus = !filterStatus || r.status === filterStatus;
         const matchSearch = !searchVal || [r.no, r.beam, r.loom, r.construction]
@@ -552,7 +661,8 @@ function renderGreyTableUI(rolls) {
 }
 
 function getRollDate(roll) {
-    return roll.date || (roll.createdAt ? String(roll.createdAt).slice(0, 10) : '');
+    const date = roll.date || roll.createdAt;
+    return date ? String(date).slice(0, 10) : '';
 }
 // Populate form fields for Edit Mode
 function editGreyRoll(rollNo) {

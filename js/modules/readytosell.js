@@ -23,7 +23,7 @@ export async function renderReadyToSellPage() {
     // 2. Fetch Grey Rolls where status === 'Ready'
     const allGreyRolls = await sendRequest('greyrolls').catch(() => []);
     const readyGreyRolls = allGreyRolls
-      .filter(roll => (roll.status || '').toLowerCase() === 'ready')
+      .filter(roll => roll.quality !== 'Defective' && (roll.status || '').toLowerCase() === 'ready')
       .map(roll => ({
         _id: roll._id,
         itemCode: roll.no ? `Roll #${roll.no}` : 'Grey Roll',

@@ -1,13 +1,35 @@
-import { sendRequest, showToast } from '../api.js';
+import { sendRequest, showToast, getActiveOutletId } from '../api.js';
+import { isSuperAdmin } from '../auth.js';
 
 let activeType = 'yarn';
 let editingId = null;
 let cachedRecords = [];
+let cachedGreyRolls = [];
+let cachedLoomRange = null;
+let selectedLoom = null;
 let inwardDatePage = 0;
 
 export function setupInwardHandlers() {
     const form = document.getElementById('inwardForm');
     if (!form) return;
+
+    const loomRangeForm = document.getElementById('loomRangeForm');
+    const addLoomSlotsBtn = document.getElementById('addLoomSlotsBtn');
+    addLoomSlotsBtn?.addEventListener('click', () => loomRangeForm?.classList.toggle('hidden'));
+    loomRangeForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const start = Number(document.getElementById('loom-range-start').value);
+        const end = Number(document.getElementById('loom-range-end').value);
+        try {
+            cachedLoomRange = await sendRequest('inward/loom-range', 'PUT', { start, end });
+            selectedLoom = null;
+            loomRangeForm.classList.add('hidden');
+            renderLoomBoard();
+            showToast('Loom slots saved for this outlet.');
+        } catch (error) {
+            showToast(error.message || 'Unable to save loom range.');
+        }
+    });
 
     // Interactive Dropdown Visibility Toggles
     const yrSelect = document.getElementById('yr-type');
@@ -187,10 +209,121 @@ export async function renderInwardTable() {
 
     try {
         cachedRecords = await sendRequest('inward') || [];
+        cachedGreyRolls = await sendRequest('greyrolls').catch(() => []);
+        await loadLoomRange();
         renderInwardTableUI(cachedRecords);
+        renderLoomBoard();
     } catch (e) {
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">Database Sync Failure</td></tr>';
     }
+}
+
+async function loadLoomRange() {
+    const rangeForm = document.getElementById('loomRangeForm');
+    const addSlotsBtn = document.getElementById('addLoomSlotsBtn');
+    const hasOutlet = Boolean(getActiveOutletId());
+    addSlotsBtn?.classList.toggle('hidden', !isSuperAdmin());
+    if (addSlotsBtn) addSlotsBtn.disabled = !hasOutlet;
+    rangeForm?.classList.add('hidden');
+    cachedLoomRange = null;
+    const outletId = getActiveOutletId();
+    if (!outletId) return;
+    try {
+        cachedLoomRange = await sendRequest('inward/loom-range');
+        const startInput = document.getElementById('loom-range-start');
+        const endInput = document.getElementById('loom-range-end');
+        if (startInput) startInput.value = cachedLoomRange.start ?? '';
+        if (endInput) endInput.value = cachedLoomRange.end ?? '';
+    } catch (error) {
+        cachedLoomRange = null;
+    }
+}
+
+function normalizeLoomValue(value) {
+    return String(value || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '').replace(/^(loom|machine|mc)/, '');
+}
+
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[character]);
+}
+
+function renderLoomBoard() {
+    const slots = document.getElementById('loomSlots');
+    const details = document.getElementById('loomDetails');
+    if (!slots || !details) return;
+
+    if (!cachedLoomRange || cachedLoomRange.start == null || cachedLoomRange.end == null) {
+        slots.innerHTML = `<div class="loom-empty">${getActiveOutletId() ? 'No loom range configured for this outlet.' : 'Select an outlet to view its loom slots.'}</div>`;
+        details.classList.add('hidden');
+        return;
+    }
+
+    const start = Number(cachedLoomRange.start);
+    const end = Number(cachedLoomRange.end);
+    const looms = Array.from({ length: end - start + 1 }, (_, index) => String(start + index));
+    slots.innerHTML = looms.map(loom => {
+        const beam = cachedRecords.find(record => record.type === 'beam' && normalizeLoomValue(record.wbLoom) === normalizeLoomValue(loom));
+        const selected = selectedLoom === loom ? ' selected' : '';
+        return `<button type="button" class="loom-slot${beam ? ' occupied' : ''}${selected}" data-loom="${loom}">
+            <strong>Loom ${loom}</strong><span>${beam ? `Beam ${escapeHtml(beam.id)}` : 'Empty'}</span>
+        </button>`;
+    }).join('');
+
+    slots.querySelectorAll('.loom-slot').forEach(button => button.addEventListener('click', () => {
+        selectedLoom = button.dataset.loom;
+        renderLoomBoard();
+        renderLoomDetails(selectedLoom);
+    }));
+
+    if (selectedLoom !== null) renderLoomDetails(selectedLoom);
+    else details.classList.add('hidden');
+}
+
+function renderLoomDetails(loom) {
+    const details = document.getElementById('loomDetails');
+    if (!details) return;
+    const beam = cachedRecords.find(record => record.type === 'beam' && normalizeLoomValue(record.wbLoom) === normalizeLoomValue(loom));
+    const readyRolls = cachedGreyRolls.filter(roll => roll.status === 'Ready' && (
+        normalizeLoomValue(roll.loom) === normalizeLoomValue(loom)
+        || (beam && normalizeLoomValue(roll.beam) === normalizeLoomValue(beam.id))
+    ));
+    const totalMeters = readyRolls.reduce((total, roll) => total + (Number(roll.meters) || 0), 0);
+    details.classList.remove('hidden');
+    details.innerHTML = `
+        <div class="loom-details-header">
+            <div class="loom-popover-title">
+                <strong>Loom ${escapeHtml(loom)}</strong>
+                <span class="loom-popover-status${beam ? ' occupied' : ''}">${beam ? `Beam ${escapeHtml(beam.id)} assigned` : 'Slot empty'}</span>
+            </div>
+            <div class="loom-detail-actions">
+                ${beam ? '<button type="button" class="btn btn-primary btn-sm" id="finishLoomBtn">Finish</button>' : ''}
+                <button type="button" class="loom-popover-close" id="closeLoomDetails" aria-label="Close loom details" title="Close">×</button>
+            </div>
+        </div>
+        <div class="loom-stock-summary">
+            <div><strong>${readyRolls.length}</strong><span>Ready rolls</span></div>
+            <div><strong>${totalMeters}</strong><span>Total meters</span></div>
+        </div>
+        <div class="loom-roll-heading">Ready grey stock</div>
+        ${readyRolls.length ? `<ul class="loom-roll-list">${readyRolls.map(roll => `<li><span>${escapeHtml(roll.no)}</span><strong>${Number(roll.meters) || 0} m</strong></li>`).join('')}</ul>` : '<div class="loom-empty">No Ready grey rolls for this loom.</div>'}
+    `;
+    details.querySelector('#finishLoomBtn')?.addEventListener('click', async () => {
+        const estimatedWastage = Math.max(0, Number(beam.wbLength || 0) - Number(beam.usedMeters || 0));
+        if (!confirm(`Finish loom ${loom}? The remaining ${estimatedWastage} m will be recorded as wastage. Grey roll records will be kept.`)) return;
+        try {
+            const result = await sendRequest(`inward/loom/${encodeURIComponent(loom)}/finish`, 'POST', {});
+            await renderInwardTable();
+            showToast(`Loom ${loom} finished. ${result.wastageMeters} m recorded as wastage.`);
+        } catch (error) {
+            showToast(error.message || 'Unable to finish this loom.');
+        }
+    });
+    details.querySelector('#closeLoomDetails')?.addEventListener('click', () => {
+        selectedLoom = null;
+        renderLoomBoard();
+    });
 }
 
 function getRecordDate(record) {

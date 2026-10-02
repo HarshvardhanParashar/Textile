@@ -12,8 +12,9 @@ export async function renderDashboard() {
         // Stats calculations
         const totalYarnRolls = inward.filter(item => item.type === 'yarn').length;
         const totalWarpBeams = inward.filter(item => item.type === 'beam').length;
-        const activeGreyRolls = greyRolls.filter(roll => roll.status !== 'Sold').length;
-        const readyToSell = greyRolls.filter(roll => roll.status === 'Ready').length;
+        const stockGreyRolls = greyRolls.filter(roll => roll.quality !== 'Defective');
+        const activeGreyRolls = stockGreyRolls.filter(roll => roll.status !== 'Sold').length;
+        const readyToSell = stockGreyRolls.filter(roll => roll.status === 'Ready').length;
         const totalSpares = spares.length;
         const totalChallans = challans.length;
 
@@ -44,7 +45,7 @@ export async function renderDashboard() {
         // Recent Grey Rolls
         const greyTbody = document.getElementById('dash-grey-body');
         if (greyTbody) {
-            const recentGrey = greyRolls.slice(0, 5);
+            const recentGrey = stockGreyRolls.slice(0, 5);
             greyTbody.innerHTML = recentGrey.length 
                 ? recentGrey.map(r => `
                     <tr>
