@@ -85,6 +85,7 @@ async function mergeDuplicateSpareParts() {
         const primary = items[0];
         const mergedQuantity = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
         const mergedIssuances = items.flatMap(item => item.issuances || []);
+        const mergedStockAdditions = items.flatMap(item => item.stockAdditions || []);
         const firstSupplier = items.find(item => item.supplier && String(item.supplier).trim())?.supplier || '';
         const minStock = Math.min(...items.map(item => Number(item.minStock || 0)));
         const earliestDate = new Date(Math.min(...items.map(item => new Date(item.dateAdded || item.createdAt || Date.now).getTime())));
@@ -111,6 +112,7 @@ async function mergeDuplicateSpareParts() {
                     minStock,
                     dateAdded: earliestDate,
                     remarks: mergedRemarks,
+                    stockAdditions: mergedStockAdditions,
                     issuances: mergedIssuances
                 }
             }

@@ -209,6 +209,7 @@ async function renderAuthUI() {
 
     const isAdmin = isSuperAdmin(currentUser);
     adminCard?.classList.toggle('hidden', !isAdmin);
+    document.getElementById('all-spare-parts-card')?.classList.toggle('hidden', !isAdmin);
     const outletCard = document.querySelector('.outlet-card');
     outletCard?.classList.toggle('hidden', !isAdmin);
     const outletAddBtn = document.getElementById('createOutletBtn');

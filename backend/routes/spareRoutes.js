@@ -48,6 +48,12 @@ router.post('/', async (req, res) => {
     if (existing) {
       existing.name = name;
       existing.quantity = Number(existing.quantity || 0) + qty;
+      if (qty > 0) {
+        existing.stockAdditions.push({
+          quantity: qty,
+          dateAdded: payload.dateAdded || new Date()
+        });
+      }
 
       existing.code = '';
       existing.machineType = '';
@@ -70,7 +76,11 @@ router.post('/', async (req, res) => {
       code: '',
       machineType: '',
       cost: 0,
-      quantity: qty
+      quantity: qty,
+      stockAdditions: qty > 0 ? [{
+        quantity: qty,
+        dateAdded: payload.dateAdded || new Date()
+      }] : []
     });
     await newSpare.save();
     res.status(201).json({ ...newSpare.toObject(), merged: false });

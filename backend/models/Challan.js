@@ -15,11 +15,13 @@ const ChallanSchema = new mongoose.Schema({
   partyName: { type: String, required: true },
   address: { type: String, default: '' },
   gstOrMobile: { type: String, default: '' },
+  fabricConstruction: { type: String, default: '' },
   transport: { type: String, default: '' },
   deliveryDate: { type: Date, default: Date.now },
   remarks: { type: String, default: '' },
   items: [ChallanItemSchema],
   totalMeters: { type: Number, default: 0 },
+  totalWeight: { type: Number, default: 0 },
   totalItems: { type: Number, default: 0 }
 }, { timestamps: true });
 

@@ -1,4 +1,5 @@
 import { sendRequest, showToast } from '../api.js';
+import { isSuperAdmin } from '../auth.js';
 
 let cachedSpares = [];
 let spareDatePage = 0;
@@ -280,14 +281,21 @@ function populatePartSelect(spares) {
 
 function renderInventoryTable(spares) {
   const tbody = document.getElementById('spare-body');
+  const isAdmin = isSuperAdmin();
+  const inventoryCard = document.getElementById('all-spare-parts-card');
+  inventoryCard?.classList.toggle('hidden', !isAdmin);
+  document.querySelectorAll('#all-spare-parts-card .super-admin-only').forEach(element => {
+    element.classList.toggle('hidden', !isAdmin);
+  });
+
   const query = document.getElementById('spare-search')?.value.toLowerCase() || '';
   const selectedDate = document.getElementById('spare-filter-date')?.value || '';
   const showAllDates = document.getElementById('spare-show-all-dates')?.checked || false;
   const dates = [...new Set(spares.map(s => getDateKey(s.dateAdded)).filter(Boolean))].sort((a, b) => b.localeCompare(a));
   spareDatePage = Math.min(spareDatePage, Math.max(dates.length - 1, 0));
   const activeDate = showAllDates ? '' : selectedDate || dates[spareDatePage];
+  const now = new Date();
 
-  const canManage = true;
   const filtered = spares.filter(s =>
     (!activeDate || getDateKey(s.dateAdded) === activeDate) &&
     (s.name.toLowerCase().includes(query) ||
@@ -295,22 +303,29 @@ function renderInventoryTable(spares) {
   );
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#94a3b8; padding:22px;">No matching spare parts found</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${isAdmin ? 9 : 8}" style="text-align:center; color:#94a3b8; padding:22px;">No matching spare parts found</td></tr>`;
   } else {
     tbody.innerHTML = filtered.map(s => {
     const totalIssued = s.issuances ? s.issuances.reduce((acc, i) => acc + i.qtyIssued, 0) : 0;
+    const addedThisMonth = (s.stockAdditions || []).reduce((total, addition) => {
+      const addedDate = new Date(addition.dateAdded);
+      return addedDate.getMonth() === now.getMonth() && addedDate.getFullYear() === now.getFullYear()
+        ? total + Number(addition.quantity || 0)
+        : total;
+    }, 0);
     const isLow = s.quantity <= s.minStock;
     const statusBadge = isLow
       ? `<span style="background:#fee2e2; color:#dc2626; padding:2px 8px; border-radius:4px; font-weight:600; font-size:11px;">Low Stock</span>`
       : `<span style="background:#dcfce7; color:#15803d; padding:2px 8px; border-radius:4px; font-weight:600; font-size:11px;">In Stock</span>`;
 
-    const deleteCell = canManage ? `<td style="padding:10px;"><button onclick="deleteSpareItem('${s._id}')" style="border:none; background:none; cursor:pointer; color:#ef4444; font-size:14px;">🗑️</button></td>` : '<td style="padding:10px; color: var(--muted); font-size:12px;">View only</td>';
+    const deleteCell = `<td style="padding:10px;"><button onclick="deleteSpareItem('${s._id}')" style="border:none; background:none; cursor:pointer; color:#ef4444; font-size:14px;">🗑️</button></td>`;
 
     return `
       <tr style="border-bottom:1px solid #f1f5f9;">
         <td style="padding:10px;"><strong>${s.name}</strong></td>
         <td style="padding:10px;">${s.dateAdded ? new Date(s.dateAdded).toLocaleDateString('en-IN') : '—'}</td>
         <td style="padding:10px;"><strong>${s.quantity}</strong></td>
+        <td class="super-admin-only${isAdmin ? '' : ' hidden'}" style="padding:10px;"><strong>${addedThisMonth} ${s.unit}</strong></td>
         <td style="padding:10px;">${totalIssued}</td>
         <td style="padding:10px;">${s.unit}</td>
         <td style="padding:10px;">${s.supplier || '—'}</td>

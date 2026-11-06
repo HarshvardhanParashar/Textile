@@ -566,8 +566,8 @@
         <input type="text" id="ch-address" placeholder="Full address" style="padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fafafa; outline: none;">
       </div>
       <div style="display: flex; flex-direction: column; gap: 6px;">
-        <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">GST NO / MOBILE</label>
-        <input type="text" id="ch-gst" placeholder="GST or mobile" style="padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fafafa; outline: none;">
+        <label style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">FABRIC CONSTRUCTION</label>
+        <input type="text" id="ch-construction" placeholder="Fabric construction" style="padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; background: #fafafa; outline: none;">
       </div>
     </div>
 
@@ -624,13 +624,14 @@
             <th style="padding: 12px; font-weight: 700;">ADDRESS</th>
             <th style="padding: 12px; font-weight: 700;">ITEMS</th>
             <th style="padding: 12px; font-weight: 700;">TOTAL METERS</th>
+            <th style="padding: 12px; font-weight: 700;">TOTAL WEIGHT</th>
             <th style="padding: 12px; font-weight: 700;">DATE</th>
             <th style="padding: 12px; font-weight: 700;">PRINT</th>
           </tr>
         </thead>
         <tbody id="issued-challans-body">
           <tr>
-            <td colspan="7" style="text-align: center; color: #94a3b8; padding: 22px;">No issued challans found</td>
+            <td colspan="8" style="text-align: center; color: #94a3b8; padding: 22px;">No issued challans found</td>
           </tr>
         </tbody>
       </table>
@@ -773,7 +774,7 @@
   </div>
 
   <!-- 3. INVENTORY TABLE -->
-  <div class="card">
+  <div class="card" id="all-spare-parts-card">
     <div class="card-header">
       <span class="card-title">All Spare Parts in Stock</span>
       <div class="filter-row">
@@ -789,6 +790,7 @@
             <th style="padding:10px;">Part Name</th>
             <th style="padding:10px;">Date Added</th>
             <th style="padding:10px;">In Stock</th>
+            <th class="super-admin-only hidden" style="padding:10px;">Added This Month</th>
             <th style="padding:10px;">Total Issued</th>
             <th style="padding:10px;">Unit</th>
             <th style="padding:10px;">Supplier</th>
@@ -797,7 +799,7 @@
           </tr>
         </thead>
         <tbody id="spare-body">
-          <tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:22px;">No spare parts added yet</td></tr>
+          <tr><td colspan="9" style="text-align:center; color:#94a3b8; padding:22px;">No spare parts added yet</td></tr>
         </tbody>
       </table>
     </div>

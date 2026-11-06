@@ -8,6 +8,11 @@ const IssuanceSchema = new mongoose.Schema({
   remarks: { type: String, default: '' }
 });
 
+const StockAdditionSchema = new mongoose.Schema({
+  quantity: { type: Number, required: true },
+  dateAdded: { type: Date, default: Date.now }
+}, { _id: false });
+
 const SparePartSchema = new mongoose.Schema({
   outletId: { type: mongoose.Schema.Types.ObjectId, ref: 'Outlet', default: null },
   name: { type: String, required: true },
@@ -20,6 +25,7 @@ const SparePartSchema = new mongoose.Schema({
   minStock: { type: Number, default: 0 },
   dateAdded: { type: Date, default: Date.now },
   remarks: { type: String, default: '' },
+  stockAdditions: { type: [StockAdditionSchema], default: [] },
   issuances: [IssuanceSchema]
 }, { timestamps: true });
 

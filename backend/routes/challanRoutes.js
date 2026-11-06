@@ -50,7 +50,7 @@ router.post('/', async (req, res) => {
   session.startTransaction();
 
   try {
-    const { partyName, address, gstOrMobile, transport, deliveryDate, remarks, items } = req.body;
+    const { partyName, address, fabricConstruction, transport, deliveryDate, remarks, items } = req.body;
     const outletId = String(req.body.outletId || req.query.outletId || '').trim() || null;
 
     const normalizedItems = (items || []).map(item => ({
@@ -78,6 +78,7 @@ router.post('/', async (req, res) => {
     const challanNo = `CH-${nextNum}`;
 
     const totalMeters = normalizedItems.reduce((acc, item) => acc + (Number(item.meters) || 0), 0);
+    const totalWeight = normalizedItems.reduce((acc, item) => acc + (Number(item.weight) || 0), 0);
 
     // Create Challan Document (Setting 'no' explicitly fixes any fallback index issues)
     const challan = new Challan({
@@ -86,13 +87,14 @@ router.post('/', async (req, res) => {
       challanNo,
       partyName,
       address,
-      gstOrMobile,
+      fabricConstruction,
       transport,
       deliveryDate: deliveryDate || new Date(),
       remarks,
       items: normalizedItems,
       totalItems: normalizedItems.length,
-      totalMeters
+      totalMeters,
+      totalWeight
     });
 
     await challan.save({ session });

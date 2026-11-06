@@ -38,6 +38,7 @@ async function loadReadyItems() {
       sendRequest('readytosell').catch(() => []),
       sendRequest('greyrolls').catch(() => [])
     ]);
+    const greyRolls = Array.isArray(greyRollResponse) ? greyRollResponse : [];
 
     const readyToSellItems = Array.isArray(readySellResponse)
       ? readySellResponse.map(item => ({
@@ -46,22 +47,21 @@ async function loadReadyItems() {
           _id: item._id,
           rollNo: item.itemCode || `RTS-${item._id?.slice(-4) || 'item'}`,
           meters: Number(item.quantityMeters ?? item.meters ?? 0),
+          weight: Number(item.weight ?? greyRolls.find(roll => roll._id === item.sourceGreyRollId)?.weight ?? 0),
           quality: item.qualityGrade || item.quality || 'Standard'
         }))
       : [];
 
-    const readyGreyRolls = Array.isArray(greyRollResponse)
-      ? greyRollResponse
-          .filter(roll => roll.quality !== 'Defective' && (roll.status || '').toLowerCase() === 'ready')
-          .map(roll => ({
-            ...roll,
-            id: roll._id,
-            _id: roll._id,
-            rollNo: roll.no ? `Roll #${roll.no}` : `Roll-${roll._id?.slice(-4) || 'new'}`,
-            meters: Number(roll.meters ?? 0),
-            quality: roll.grade || roll.quality || 'Standard'
-          }))
-      : [];
+    const readyGreyRolls = greyRolls
+      .filter(roll => roll.quality !== 'Defective' && (roll.status || '').toLowerCase() === 'ready')
+      .map(roll => ({
+        ...roll,
+        id: roll._id,
+        _id: roll._id,
+        rollNo: roll.no ? `Roll #${roll.no}` : `Roll-${roll._id?.slice(-4) || 'new'}`,
+        meters: Number(roll.meters ?? 0),
+        quality: roll.grade || roll.quality || 'Standard'
+      }));
 
     readyRollsList = [...readyGreyRolls, ...readyToSellItems];
   } catch (err) {
@@ -111,6 +111,7 @@ function renderReadyItemsSelector() {
               </div>
               <div class="challan-item-meta">
                 <span>${Number(roll.meters || 0).toFixed(1)} m</span>
+                <span>${Number(roll.weight || 0).toFixed(2)} kg</span>
                 <span>${roll.quality || 'Standard'}</span>
               </div>
               <div class="challan-item-footer">
@@ -219,7 +220,7 @@ async function generateChallan() {
   const payload = {
     partyName,
     address: document.getElementById('ch-address').value.trim(),
-    gstOrMobile: document.getElementById('ch-gst').value.trim(),
+    fabricConstruction: document.getElementById('ch-construction').value.trim(),
     transport: document.getElementById('ch-transport').value.trim(),
     deliveryDate: document.getElementById('ch-date').value || new Date().toISOString(),
     remarks: document.getElementById('ch-remarks').value.trim(),
@@ -259,7 +260,7 @@ async function loadIssuedChallans() {
   try {
     const challans = await sendRequest('challans');
     if (!challans || !challans.length) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 22px;">No issued challans found</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #94a3b8; padding: 22px;">No issued challans found</td></tr>`;
       return;
     }
 
@@ -270,6 +271,7 @@ async function loadIssuedChallans() {
         <td style="padding: 12px;">${c.address || '—'}</td>
         <td style="padding: 12px;">${c.totalItems || c.items.length} items</td>
         <td style="padding: 12px;">${(c.totalMeters || 0).toFixed(1)} m</td>
+        <td style="padding: 12px;">${Number(c.totalWeight || (c.items || []).reduce((total, item) => total + Number(item.weight || 0), 0)).toFixed(2)} kg</td>
         <td style="padding: 12px;">${new Date(c.deliveryDate).toISOString().split('T')[0]}</td>
         <td style="padding: 12px;">
           <button onclick="printChallan('${c._id}')" style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; color: #334155;">
@@ -279,14 +281,14 @@ async function loadIssuedChallans() {
       </tr>
     `).join('');
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ef4444; padding: 22px;">Failed to load challans</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #ef4444; padding: 22px;">Failed to load challans</td></tr>`;
   }
 }
 
 function clearChallanForm() {
   document.getElementById('ch-party').value = '';
   document.getElementById('ch-address').value = '';
-  document.getElementById('ch-gst').value = '';
+  document.getElementById('ch-construction').value = '';
   document.getElementById('ch-transport').value = '';
   document.getElementById('ch-remarks').value = '';
   selectedRollIds.clear();
@@ -308,6 +310,7 @@ function printChallan(id) {
     if (!c) return showToast('Challan record not found', 'error');
 
     const totalMeters = Number(c.totalMeters || c.items.reduce((sum, item) => sum + Number(item.meters || 0), 0));
+    const totalWeight = Number(c.totalWeight || c.items.reduce((sum, item) => sum + Number(item.weight || 0), 0));
     const totalItems = Number(c.totalItems || c.items.length);
     const challanRemarks = c.remarks || '—';
 
@@ -409,7 +412,7 @@ function printChallan(id) {
               <div class="info-block">
                 <div><strong>Party:</strong> ${escapeHtml(c.partyName)}</div>
                 <div><strong>Address:</strong> ${escapeHtml(c.address || 'N/A')}</div>
-                <div><strong>GST/Mobile:</strong> ${escapeHtml(c.gstOrMobile || 'N/A')}</div>
+                <div><strong>Fabric Construction:</strong> ${escapeHtml(c.fabricConstruction || 'N/A')}</div>
               </div>
             </div>
 
@@ -417,8 +420,9 @@ function printChallan(id) {
               <thead>
                 <tr>
                   <th style="width: 8%;">S.No</th>
-                  <th style="width: 35%;">Roll / Item No</th>
-                  <th style="width: 18%;">Meters</th>
+                  <th style="width: 28%;">Roll / Item No</th>
+                  <th style="width: 15%;">Meters</th>
+                  <th style="width: 15%;">Weight (kg)</th>
                   <th>Remarks</th>
                 </tr>
               </thead>
@@ -428,6 +432,7 @@ function printChallan(id) {
                     <td>${idx + 1}</td>
                     <td>${escapeHtml(item.rollNo || '—')}</td>
                     <td>${Number(item.meters || 0).toFixed(1)} m</td>
+                    <td>${Number(item.weight || 0).toFixed(2)} kg</td>
                     <td>${escapeHtml(item.remarks || challanRemarks || '—')}</td>
                   </tr>
                 `).join('')}
@@ -435,7 +440,7 @@ function printChallan(id) {
             </table>
 
             <div class="totals">
-              Total Items: ${totalItems} &nbsp;&nbsp; | &nbsp;&nbsp; Total Meters: ${Number(totalMeters).toFixed(1)} m
+              Total Items: ${totalItems} &nbsp;&nbsp; | &nbsp;&nbsp; Total Meters: ${Number(totalMeters).toFixed(1)} m &nbsp;&nbsp; | &nbsp;&nbsp; Total Weight: ${totalWeight.toFixed(2)} kg
             </div>
 
             <div class="remarks-box">
